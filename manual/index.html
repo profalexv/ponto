@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual do Usuário — Ponto</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #f9fafb;
+      --bg-alt: #f3f4f6;
+      --success: #16a34a;
+      --warning: #b45309;
+      --danger: #dc2626;
+      --note-bg: #eff6ff;
+      --note-border: #93c5fd;
+      --tip-bg: #f0fdf4;
+      --tip-border: #86efac;
+      --warn-bg: #fffbeb;
+      --warn-border: #fcd34d;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    /* ── Layout ────────────────────────────────────── */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ───────────────────────────────────── */
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 24px 0 48px;
+    }
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .sidebar-brand-icon { font-size: 28px; }
+    .sidebar-brand-name { font-size: 18px; font-weight: 700; color: var(--text); }
+    .sidebar-brand-sub  { font-size: 11px; color: var(--muted); }
+
+    .nav-section {
+      padding: 8px 20px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+    .nav-link {
+      display: block;
+      padding: 7px 20px;
+      font-size: 13px;
+      color: #374151;
+      text-decoration: none;
+      border-left: 3px solid transparent;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+    }
+    .nav-link:hover { background: var(--bg); color: var(--primary); }
+    .nav-link.active { border-left-color: var(--primary); color: var(--primary); background: var(--note-bg); font-weight: 500; }
+
+    /* ── Content ───────────────────────────────────── */
+    .content {
+      flex: 1;
+      max-width: 860px;
+      padding: 40px 48px 80px;
+    }
+
+    /* ── Typography ────────────────────────────────── */
+    h1 { font-size: 30px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    h2 {
+      font-size: 22px; font-weight: 700; color: var(--text);
+      margin: 48px 0 16px;
+      padding-top: 20px;
+      border-top: 2px solid var(--border);
+    }
+    h2:first-of-type { border-top: none; padding-top: 0; margin-top: 24px; }
+    h3 { font-size: 17px; font-weight: 600; color: #1f2937; margin: 28px 0 10px; }
+    h4 { font-size: 14px; font-weight: 600; color: #374151; margin: 18px 0 6px; text-transform: uppercase; letter-spacing: .04em; }
+    p  { margin-bottom: 12px; color: #374151; }
+    ul, ol { margin: 8px 0 16px 20px; }
+    li { margin-bottom: 6px; color: #374151; }
+    strong { color: var(--text); }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 13px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: #b91c1c;
+    }
+    hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+    /* ── Cover ─────────────────────────────────────── */
+    .cover {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+      border-radius: 16px;
+      padding: 40px 36px;
+      color: #fff;
+      margin-bottom: 40px;
+    }
+    .cover-icon  { font-size: 52px; margin-bottom: 12px; }
+    .cover h1    { font-size: 34px; color: #fff; margin-bottom: 6px; }
+    .cover .sub  { font-size: 15px; color: rgba(255,255,255,.75); margin-bottom: 20px; }
+    .cover-meta  { display: flex; gap: 24px; flex-wrap: wrap; }
+    .cover-meta-item { font-size: 12px; color: rgba(255,255,255,.6); }
+    .cover-meta-item strong { color: rgba(255,255,255,.9); display: block; font-size: 14px; }
+
+    /* ── Callouts ──────────────────────────────────── */
+    .note, .tip, .warn, .danger-note {
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 16px 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .note        { background: var(--note-bg); border-left: 4px solid #3b82f6; }
+    .tip         { background: var(--tip-bg);  border-left: 4px solid #22c55e; }
+    .warn        { background: var(--warn-bg); border-left: 4px solid #f59e0b; }
+    .danger-note { background: #fef2f2;        border-left: 4px solid #ef4444; }
+    .note p, .tip p, .warn p, .danger-note p { margin-bottom: 0; }
+    .callout-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .note .callout-title        { color: #1d4ed8; }
+    .tip .callout-title         { color: #15803d; }
+    .warn .callout-title        { color: #92400e; }
+    .danger-note .callout-title { color: #b91c1c; }
+
+    /* ── Steps ─────────────────────────────────────── */
+    .steps { list-style: none; margin: 16px 0; padding: 0; }
+    .steps li {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 18px;
+      align-items: flex-start;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 1px;
+    }
+    .step-body { flex: 1; }
+    .step-body strong { display: block; margin-bottom: 2px; font-size: 14px; }
+    .step-body p { margin-bottom: 4px; font-size: 14px; }
+
+    /* ── Table ─────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; margin: 16px 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    thead { background: var(--bg-alt); }
+    th {
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      color: #374151;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--border);
+    }
+    td {
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      color: #374151;
+      vertical-align: top;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--bg); }
+
+    /* ── Badges ────────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-blue   { background: #dbeafe; color: #1e40af; }
+    .badge-green  { background: #dcfce7; color: #15803d; }
+    .badge-yellow { background: #fef9c3; color: #92400e; }
+    .badge-red    { background: #fee2e2; color: #b91c1c; }
+    .badge-gray   { background: #f3f4f6; color: #6b7280; }
+
+    /* ── UI Screenshots (mockup boxes) ────────────── */
+    .ui-mock {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 16px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .ui-mock-bar {
+      background: var(--bg-alt);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ui-mock-body { padding: 16px 20px; font-size: 13px; color: #374151; }
+
+    /* ── Tab row ───────────────────────────────────── */
+    .tab-row {
+      display: flex;
+      gap: 4px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .tab-item {
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      border-radius: 6px 6px 0 0;
+    }
+    .tab-item.on { color: var(--primary); border-bottom-color: var(--primary); background: var(--note-bg); }
+
+    /* ── Print ─────────────────────────────────────── */
+    @media print {
+      .sidebar { display: none; }
+      .content { max-width: 100%; padding: 20px; }
+      .cover   { background: #fff; color: #000; border: 2px solid #000; }
+      .cover h1, .cover .sub { color: #000; }
+      h2 { page-break-before: always; }
+    }
+
+    /* ── Responsive ────────────────────────────────── */
+    @media (max-width: 768px) {
+      .sidebar  { display: none; }
+      .content  { padding: 24px 20px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ══ SIDEBAR ══ -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-brand-icon">🕐</span>
+      <div>
+        <div class="sidebar-brand-name">Ponto</div>
+        <div class="sidebar-brand-sub">Manual do Usuário</div>
+      </div>
+    </div>
+
+    <div class="nav-section">Introdução</div>
+    <a class="nav-link" href="#visao-geral">Visão Geral</a>
+    <a class="nav-link" href="#acesso">Como Acessar</a>
+    <a class="nav-link" href="#planos">Planos e Limites</a>
+
+    <div class="nav-section">Sistema</div>
+    <a class="nav-link" href="#hoje">Aba Hoje</a>
+    <a class="nav-link" href="#bater-ponto">Bater Ponto</a>
+    <a class="nav-link" href="#funcionarios">Funcionários</a>
+    <a class="nav-link" href="#historico">Histórico</a>
+    <a class="nav-link" href="#verificacao">Verificação</a>
+    <a class="nav-link" href="#folha">Folha Mensal</a>
+    <a class="nav-link" href="#assinatura-plano">Gerenciar Plano</a>
+
+    <div class="nav-section">Exportação</div>
+    <a class="nav-link" href="#afd">Exportar AFD</a>
+
+    <div class="nav-section">Conformidade</div>
+    <a class="nav-link" href="#conformidade">Base Legal</a>
+    <a class="nav-link" href="#lgpd">LGPD e GPS</a>
+    <a class="nav-link" href="#imutabilidade">Imutabilidade</a>
+
+    <div class="nav-section">Referência</div>
+    <a class="nav-link" href="#glossario">Glossário</a>
+    <a class="nav-link" href="#faq">Perguntas Frequentes</a>
+  </nav>
+
+  <!-- ══ CONTEÚDO ══ -->
+  <main class="content">
+
+    <!-- CAPA -->
+    <div class="cover">
+      <div class="cover-icon">🕐</div>
+      <h1>Ponto</h1>
+      <p class="sub">Manual do Usuário — Controle Eletrônico de Jornada de Trabalho</p>
+      <div class="cover-meta">
+        <div class="cover-meta-item"><strong>Versão</strong>1.0 · março/2026</div>
+        <div class="cover-meta-item"><strong>Acesso</strong>ponto.alexandre.pro.br</div>
+        <div class="cover-meta-item"><strong>Conformidade</strong>CLT Art. 74 · Portaria MTP 671/2021 · LGPD</div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="visao-geral">Visão Geral</h2>
+
+    <p>
+      O <strong>Ponto</strong> é um sistema de controle eletrônico de jornada de trabalho
+      hospedado na web. Funciona diretamente no navegador — sem instalação de software — e
+      serve qualquer tipo de empresa: comércio, indústria, serviços, saúde, escolas e redes
+      com múltiplas filiais.
+    </p>
+
+    <h3>O que o sistema faz</h3>
+    <ul>
+      <li>Registra marcações de ponto (entrada, saída, início/fim de pausa) com horário exato</li>
+      <li>Mantém um cadastro de colaboradores com PIN opcional e consentimento de GPS</li>
+      <li>Gera o arquivo <strong>AFD</strong> exigido pela Lei e pelo Ministério do Trabalho</li>
+      <li>Permite o <strong>visto de supervisão</strong> diário: validar ou apontar inconsistências</li>
+      <li>Controla a <strong>folha mensal</strong> com aceite eletrônico ou upload do scan físico</li>
+      <li>Mantém todos os registros por no mínimo 5 anos, como exige a CLT</li>
+    </ul>
+
+    <h3>O que o sistema não faz</h3>
+    <ul>
+      <li>Não calcula horas extras, adicional noturno nem folha de pagamento</li>
+      <li>Não emite holerites nem integra com sistemas de RH/ERP por padrão</li>
+      <li>Não substitui a análise de um profissional de RH ou advogado trabalhista</li>
+    </ul>
+
+    <div class="note">
+      <div class="callout-title">ℹ️ Dois acessos, um banco de dados</div>
+      <p>
+        Empresas independentes acessam em <strong>ponto.alexandre.pro.br</strong>.<br>
+        Escolas com conta no AULA.app acessam pelo painel do AULA (SSO automático).
+        O banco de dados é o mesmo para ambos — nenhum dado é duplicado.
+      </p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="acesso">Como Acessar</h2>
+
+    <h3>Login direto (qualquer empresa)</h3>
+    <ol class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Acesse a landing page</strong>
+          <p>Abra <a href="https://ponto.alexandre.pro.br" target="_blank">ponto.alexandre.pro.br</a> no navegador.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Clique em "Entrar no Sistema"</strong>
+          <p>Você será levado para a tela de login em <code>/system/</code>.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Informe e-mail e senha</strong>
+          <p>
+            Use as credenciais cadastradas na tabela <code>ponto_admins</code>.
+            O sistema guarda a sessão no navegador — você não precisará logar novamente no mesmo dispositivo.
+          </p>
+        </div>
+      </li>
+    </ol>
+
+    <h3>Acesso via AULA (SSO)</h3>
+    <p>
+      Escolas com o módulo Ponto ativado no AULA acessam pelo painel da escola.
+      Um token JWT válido é gerado pelo AULA e passado automaticamente ao sistema — <strong>nenhum novo login é solicitado</strong>.
+    </p>
+
+    <div class="tip">
+      <div class="callout-title">✅ Dica</div>
+      <p>Para acesso rápido, salve <code>ponto.alexandre.pro.br/system/</code> nos favoritos do navegador após o primeiro login.</p>
+    </div>
+
+    <h3>Encerrar sessão</h3>
+    <p>
+      Clique no botão <strong>Sair</strong> no canto superior direito do painel.
+      Isso apaga o token do armazenamento local do navegador.
+      Em computadores compartilhados, sempre encerre a sessão ao terminar.
+    </p>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="planos">Planos e Limites</h2>
+
+    <p>Cada organização contrata um plano que determina quantos colaboradores podem ser mantidos como ativos. O plano pode ser alterado a qualquer momento em <strong>ponto.alexandre.pro.br/plano/</strong>.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Plano</th>
+            <th>Preço mensal</th>
+            <th>Colaboradores incluídos</th>
+            <th>Colaborador extra</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Por Colaborador</strong></td>
+            <td>R$20 (1–8) · R$16 (9–16) · R$10 (17+)</td>
+            <td>Conforme escala</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>Mini</strong></td>
+            <td>R$ 340</td>
+            <td>até 30</td>
+            <td>+R$10/colaborador</td>
+          </tr>
+          <tr>
+            <td><strong>Pronto</strong></td>
+            <td>R$ 640</td>
+            <td>até 80</td>
+            <td>+R$10/colaborador</td>
+          </tr>
+          <tr>
+            <td><strong>Máximo</strong></td>
+            <td>R$ 980</td>
+            <td>até 150</td>
+            <td>+R$6/colaborador</td>
+          </tr>
+          <tr>
+            <td><strong>Redes</strong></td>
+            <td>Sob consulta</td>
+            <td>Ilimitado (multi-unidade)</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="warn">
+      <div class="callout-title">⚠️ Limite de colaboradores</div>
+      <p>
+        Ao atingir o limite do plano, o sistema <strong>bloqueia o cadastro de novos colaboradores</strong>.
+        O registro de ponto dos colaboradores já cadastrados continua funcionando normalmente.
+        Para desbloquear, atualize o plano ou inative colaboradores que não estejam mais na empresa.
+      </p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="hoje">Aba: Hoje</h2>
+
+    <p>É a tela inicial do sistema. Exibe todos os registros de ponto realizados no dia corrente, agrupados por colaborador.</p>
+
+    <div class="ui-mock">
+      <div class="ui-mock-bar">
+        🕐 Ponto &nbsp;|&nbsp; <span style="color:#374151">Nome da Empresa</span>
+        <span style="margin-left:auto">⏱️ Bater Ponto</span>
+      </div>
+      <div class="ui-mock-body">
+        <div class="tab-row">
+          <span class="tab-item on">📋 Hoje</span>
+          <span class="tab-item">👤 Funcionários</span>
+          <span class="tab-item">📅 Histórico</span>
+          <span class="tab-item">✅ Verificação</span>
+          <span class="tab-item">📄 Folha Mensal</span>
+          <span class="tab-item">💳 Assinatura</span>
+        </div>
+        <p style="color:#6b7280;font-size:12px">N registro(s) hoje · N funcionário(s)</p>
+        <p style="color:#6b7280;font-size:12px;margin-top:8px">Tabela: Funcionário · Último Tipo · Marcações · Último Horário · GPS</p>
+      </div>
+    </div>
+
+    <h3>Colunas da tabela</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Coluna</th><th>O que mostra</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Funcionário</strong></td><td>Nome completo do colaborador</td></tr>
+          <tr><td><strong>Último Tipo</strong></td><td>O tipo da marcação mais recente do dia: Entrada, Saída, Início de Pausa ou Fim de Pausa</td></tr>
+          <tr><td><strong>Marcações</strong></td><td>Linha do tempo resumida de todos os horários do dia com ícone de tipo</td></tr>
+          <tr><td><strong>Último Horário</strong></td><td>Horário da última marcação registrada</td></tr>
+          <tr><td><strong>GPS</strong></td><td>📍 se a última marcação tem localização capturada (requer consentimento do colaborador)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="bater-ponto">Bater Ponto</h2>
+
+    <p>O botão <strong>⏱️ Bater Ponto</strong> fica no canto superior direito do painel e também aparece na aba Hoje quando não há registros. Ao clicar, um modal é exibido.</p>
+
+    <h3>Campos do modal</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Campo</th><th>Obrigatório</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Funcionário</strong></td><td><span class="badge badge-red">Sim</span></td><td>Selecione o colaborador na lista (apenas ativos aparecem)</td></tr>
+          <tr><td><strong>Tipo de Registro</strong></td><td><span class="badge badge-red">Sim</span></td><td>Entrada · Saída · Início de Pausa · Fim de Pausa</td></tr>
+          <tr><td><strong>PIN</strong></td><td><span class="badge badge-gray">Condicional</span></td><td>Obrigatório somente se um PIN foi cadastrado para o colaborador</td></tr>
+          <tr><td><strong>Incluir GPS</strong></td><td><span class="badge badge-gray">Opcional</span></td><td>Aparece apenas se o colaborador deu consentimento de GPS. O navegador solicitará permissão de localização.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Sequência obrigatória de marcações</h3>
+    <p>O sistema valida a ordem lógica dos registros de cada colaborador:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tipo</th><th>Permitido após</th><th>Erro se tentar após</th></tr></thead>
+        <tbody>
+          <tr><td>▶ <strong>Entrada</strong></td><td>Saída (ou primeiro registro do dia)</td><td>Outra Entrada — "Já há uma entrada em aberto"</td></tr>
+          <tr><td>■ <strong>Saída</strong></td><td>Entrada ou Fim de Pausa</td><td>Nenhum registro anterior — "Não há entrada registrada"</td></tr>
+          <tr><td>⏸ <strong>Início de Pausa</strong></td><td>Entrada</td><td>Qualquer outro tipo — "Pausa só pode ser registrada após uma entrada"</td></tr>
+          <tr><td>▶ <strong>Fim de Pausa</strong></td><td>Início de Pausa</td><td>Qualquer outro tipo — "Fim de pausa só pode ser registrado após início de pausa"</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="danger-note">
+      <div class="callout-title">🚫 Registros imutáveis</div>
+      <p>
+        Uma vez gravado, um registro de ponto <strong>nunca é editado</strong>. Erros só podem ser corrigidos
+        via <strong>cancelamento com motivo</strong> (veja a aba Histórico). O registro cancelado
+        permanece visível na auditoria, conforme exige a Portaria MTP 671/2021.
+      </p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="funcionarios">Aba: Funcionários</h2>
+
+    <p>Gerencia o cadastro de colaboradores da organização. Exibe cards com nome, cargo, departamento, status e indicador de GPS.</p>
+
+    <h3>Cadastrar novo funcionário</h3>
+    <ol class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Clique em "+ Funcionário"</strong>
+          <p>Botão no canto superior direito da aba.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Preencha os dados</strong>
+          <p>Nome é obrigatório. CPF, e-mail, cargo e departamento são opcionais mas recomendados para o AFD.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Defina um PIN (opcional)</strong>
+          <p>
+            O PIN protege a marcação: o colaborador precisa digitá-lo ao bater ponto.
+            Útil quando o gestor não estiver presente. Máximo 8 dígitos.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <strong>Consentimento de GPS</strong>
+          <p>
+            Marque <em>"Consentimento para captura de GPS"</em> somente se o colaborador assinou
+            documento de consentimento conforme a LGPD. A captura de localização <strong>não ocorre</strong>
+            sem esse campo marcado.
+          </p>
+        </div>
+      </li>
+    </ol>
+
+    <h3>Campos do cadastro</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Campo</th><th>Obrigatório</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td>Nome</td><td><span class="badge badge-red">Sim</span></td><td>Nome completo do colaborador</td></tr>
+          <tr><td>CPF</td><td><span class="badge badge-gray">Não</span></td><td>Necessário para o arquivo AFD (padrão Portaria 671)</td></tr>
+          <tr><td>Cargo</td><td><span class="badge badge-gray">Não</span></td><td>Ex: Auxiliar, Operador, Analista</td></tr>
+          <tr><td>Departamento</td><td><span class="badge badge-gray">Não</span></td><td>Ex: RH, Produção, Administrativo</td></tr>
+          <tr><td>E-mail</td><td><span class="badge badge-gray">Não</span></td><td>Para contato interno</td></tr>
+          <tr><td>PIN</td><td><span class="badge badge-gray">Não</span></td><td>Código numérico de identificação na marcação</td></tr>
+          <tr><td>Consentimento GPS</td><td><span class="badge badge-gray">Não</span></td><td>Habilita captura de localização durante o ponto</td></tr>
+          <tr><td>Ativo</td><td>—</td><td>Visível só na edição. Desmarcar inativa o colaborador (não exclui histórico)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Remover (inativar) colaborador</h3>
+    <p>
+      O botão <strong>🗑 Remover</strong> no card realiza um <em>soft-delete</em>: o colaborador é marcado como inativo e
+      desaparece das listas operacionais, mas todos os registros de ponto são preservados.
+      Isso é exigido pela CLT (Art. 11) — retenção de 5 anos.
+    </p>
+
+    <div class="warn">
+      <div class="callout-title">⚠️ Limite do plano</div>
+      <p>Colaboradores inativos não contam para o limite do plano. Ao inativar um colaborador, a vaga é liberada para reposição.</p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="historico">Aba: Histórico</h2>
+
+    <p>
+      Permite consultar e filtrar todos os registros de ponto da organização, exportar o AFD e
+      cancelar registros incorretos.
+    </p>
+
+    <h3>Filtros disponíveis</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Filtro</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Data inicial / Data final</strong></td><td>Período desejado. O padrão é os últimos 7 dias.</td></tr>
+          <tr><td><strong>Funcionário</strong></td><td>Filtra por um colaborador específico ou exibe todos.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Colunas da tabela de histórico</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Coluna</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td>Funcionário</td><td>Nome do colaborador</td></tr>
+          <tr><td>Tipo</td><td>Entrada · Saída · Pausa Início · Pausa Fim</td></tr>
+          <tr><td>Horário</td><td>Data e hora exatas da marcação</td></tr>
+          <tr><td>Origem</td><td><code>browser</code> = feito pelo sistema web</td></tr>
+          <tr><td>GPS</td><td>📍 se coordenadas foram capturadas</td></tr>
+          <tr><td>Ação</td><td>Botão ✕ para cancelar (registros já cancelados mostram "Cancelado" em vermelho)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Cancelar um registro incorreto</h3>
+
+    <div class="danger-note">
+      <div class="callout-title">🚫 Atenção</div>
+      <p>O cancelamento é <strong>irreversível</strong>. O registro permanece visível como "Cancelado" na auditoria. Nunca cancele um registro correto.</p>
+    </div>
+
+    <ol class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Localize o registro</strong>
+          <p>Use os filtros de data e funcionário para encontrar o registro incorreto.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Clique em ✕</strong>
+          <p>Um modal será exibido solicitando duas informações obrigatórias.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Informe seu nome e o motivo</strong>
+          <p>Ex: <em>"Maria Silva — duplicidade por falha de rede"</em>. Esses dados ficam gravados permanentemente na auditoria.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <strong>Confirme</strong>
+          <p>O registro é marcado como cancelado. Faça uma nova marcação correta se necessário.</p>
+        </div>
+      </li>
+    </ol>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="afd">Exportar AFD</h2>
+
+    <p>
+      O <strong>Arquivo Fonte de Dados (AFD)</strong> é o documento eletrônico exigido pelo
+      Ministério do Trabalho (Portaria MTP 671/2021) para comprovação da jornada.
+      Deve ser gerado periodicamente e arquivado junto aos documentos da empresa.
+    </p>
+
+    <h3>Como exportar</h3>
+    <ol class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Acesse a aba Histórico</strong>
+          <p>Defina o período desejado nos filtros de data.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Clique em "📥 AFD"</strong>
+          <p>O arquivo <code>.txt</code> será baixado automaticamente com o nome <code>AFD_[orgId]_[data].txt</code>.</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="note">
+      <div class="callout-title">ℹ️ Formato do AFD</div>
+      <p>
+        O arquivo segue o layout REP-A da Portaria MTP 671/2021:
+        linha de cabeçalho com CNPJ/identificador, registros com NSR sequencial, data, hora, CPF e nome do colaborador, e rodapé com contagem total.
+        O sistema usa <code>CRLF</code> como separador de linha, conforme o padrão.
+      </p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="verificacao">Aba: Verificação</h2>
+
+    <p>
+      Permite que um supervisor registre diariamente se os ponto de cada colaborador
+      estão corretos. É a funcionalidade de <strong>visto diário</strong> exigida por muitas
+      convenções coletivas e recomendada como boa prática trabalhista.
+    </p>
+
+    <h3>Status de verificação</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Status</th><th>Quando usar</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-yellow">⏳ Pendente</span></td>
+            <td>Ainda não foi revisado pelo supervisor</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">✅ Validado</span></td>
+            <td>O supervisor conferiu e os registros estão corretos</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-red">⚠️ Inconsistente</span></td>
+            <td>Há algo errado — <strong>justificativa é obrigatória</strong> ao escolher este status</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Registrar um visto</h3>
+    <ol class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Selecione a data</strong>
+          <p>Use o campo de data e clique em "🔍 Carregar" para ver os vistos daquele dia.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Clique em "+ Novo Visto"</strong>
+          <p>Selecione o colaborador, a data, o status e seu nome como supervisor.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Se "Inconsistente": informe a justificativa</strong>
+          <p>Descreva claramente o problema encontrado. Ex.: <em>"Falta o registro de saída do almoço"</em>.</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="tip">
+      <div class="callout-title">✅ Dica</div>
+      <p>Realize o visto diário ao inicio do turno seguinte, revisando as marcações do dia anterior. Isso cria trilha de auditoria consistente.</p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="folha">Aba: Folha Mensal</h2>
+
+    <p>
+      Controla a <strong>assinatura da folha de ponto</strong> de cada colaborador ao final de cada mês.
+      A folha pode ser assinada de duas formas, conforme configuração da organização.
+    </p>
+
+    <h3>Métodos de assinatura</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Método</th><th>Como funciona</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>✅ <strong>Aceite Eletrônico</strong></td>
+            <td>
+              O gestor clica em "Aceite Eletrônico" no card do colaborador.
+              Um modal exibe o aviso legal e, ao confirmar, grava o nome do colaborador,
+              horário exato e valida todos os registros do período. <strong>Irreversível.</strong>
+            </td>
+          </tr>
+          <tr>
+            <td>📤 <strong>Upload do Scan</strong></td>
+            <td>
+              Imprima a folha, faça o colaborador assinar fisicamente, digitalize
+              (PDF ou imagem) e faça o upload. Aceita arquivos até <strong>10 MB</strong>
+              (.pdf · .jpg · .jpeg · .png). O arquivo fica armazenado com segurança.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Status de cada colaborador na folha</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Status</th><th>Significa</th></tr></thead>
+        <tbody>
+          <tr><td>⏳ Pendente</td><td>A folha ainda não foi assinada para esse período</td></tr>
+          <tr><td>✅ Assinado Eletronicamente</td><td>Aceite eletrônico gravado — mostra nome e horário</td></tr>
+          <tr><td>📁 Scan Enviado</td><td>Scan físico arquivado — mostra quem fez o upload e quando</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Configurar métodos permitidos</h3>
+    <p>
+      No rodapé da aba Folha Mensal há o botão <strong>⚙️ Config. de Assinatura</strong>.
+      Você pode permitir ou bloquear cada método individualmente.
+      Ao menos um método deve sempre estar ativo.
+    </p>
+
+    <div class="warn">
+      <div class="callout-title">⚠️ Importante</div>
+      <p>O aceite eletrônico valida <strong>todos</strong> os registros do período de uma vez. Certifique-se de ter revisado os registros (aba Verificação) antes de assinar.</p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="assinatura-plano">Gerenciar Plano</h2>
+
+    <p>
+      O painel de gerenciamento de plano fica em
+      <a href="https://ponto.alexandre.pro.br/plano/" target="_blank">ponto.alexandre.pro.br/plano/</a>.
+      Ele exibe o plano atual, o uso de colaboradores e o histórico de mudanças.
+    </p>
+
+    <h3>Informações exibidas</h3>
+    <ul>
+      <li><strong>Plano atual</strong> e preço</li>
+      <li><strong>Colaboradores utilizados</strong> com barra de progresso (amarelo ao atingir 80%, vermelho ao atingir 100%)</li>
+      <li><strong>Próxima cobrança</strong> (data de vencimento)</li>
+    </ul>
+
+    <h3>Alterar plano</h3>
+    <ol class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Acesse /plano/</strong>
+          <p>Faça login se necessário (mesmas credenciais do sistema).</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Selecione o novo plano</strong>
+          <p>Clique no card do plano desejado. O card ficará destacado.</p>
+        </div>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Confirme</strong>
+          <p>A alteração é imediata. O histórico de mudanças é registrado automaticamente.</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="note">
+      <div class="callout-title">ℹ️ Plano Redes</div>
+      <p>
+        Para múltiplas unidades (filiais, franquias, redes de escolas), clique em
+        <strong>"Solicitar plano Redes"</strong> na tela de planos para entrar em contato.
+        Cada unidade terá seu próprio painel de acesso com relatórios consolidados na matriz.
+      </p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="conformidade">Conformidade Legal</h2>
+
+    <p>O Ponto foi desenvolvido para atender as principais exigências da legislação brasileira:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Norma</th><th>Exigência</th><th>Como o sistema atende</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>CLT Art. 74 §2</strong></td>
+            <td>Registro de horário de entrada, saída e intervalos</td>
+            <td>Tipos: entrada · saída · pausa_inicio · pausa_fim</td>
+          </tr>
+          <tr>
+            <td><strong>CLT Art. 74 §4</strong></td>
+            <td>Registros inalteráveis</td>
+            <td>Nenhum registro é editado — apenas cancelado com motivo e trilha</td>
+          </tr>
+          <tr>
+            <td><strong>CLT Art. 11</strong></td>
+            <td>Retenção de 5 anos</td>
+            <td>Soft-delete: colaboradores inativos mantêm histórico permanente</td>
+          </tr>
+          <tr>
+            <td><strong>Portaria MTP 671/2021 (REP-A)</strong></td>
+            <td>Sistema Alternativo de Registro Eletrônico; geração do AFD</td>
+            <td>Exportação AFD no layout exigido; identificação por PIN</td>
+          </tr>
+          <tr>
+            <td><strong>LGPD (Lei 13.709/2018)</strong></td>
+            <td>Consentimento para dados pessoais sensíveis</td>
+            <td>GPS capturado somente com consentimento documentado e confirmado no cadastro</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="lgpd">LGPD e Coleta de GPS</h2>
+
+    <p>
+      A captura da localização do colaborador durante o ponto é <strong>opcional</strong> e controlada
+      por consentimento explícito, conforme LGPD Art. 7, inciso I.
+    </p>
+
+    <h3>Como funciona</h3>
+    <ul>
+      <li>O campo <strong>Consentimento GPS</strong> no cadastro do colaborador deve ser marcado <em>somente</em> após o colaborador assinar um Termo de Consentimento específico</li>
+      <li>Sem esse campo marcado, <strong>nenhuma coordenada é capturada ou exibida</strong>, mesmo que o dispositivo possua GPS</li>
+      <li>As coordenadas são salvas somente na tabela de registros — nunca compartilhadas</li>
+      <li>O colaborador pode revogar o consentimento a qualquer momento; basta desmarcar o campo no formulário de edição</li>
+    </ul>
+
+    <div class="tip">
+      <div class="callout-title">✅ Boa prática</div>
+      <p>Mantenha sempre uma cópia assinada do Termo de Consentimento de GPS nos documentos do colaborador, identificando data e versão do documento.</p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="imutabilidade">Imutabilidade dos Registros</h2>
+
+    <p>
+      Por exigência da Portaria MTP 671/2021, nenhum registro de ponto pode ser <em>editado</em>.
+      O sistema implementa isso rigorosamente:
+    </p>
+
+    <ul>
+      <li>Não existe botão de editar em registros de ponto</li>
+      <li>O banco de dados nunca atualiza <code>punched_at</code> ou qualquer dado de um registro já gravado</li>
+      <li>Para corrigir um registro errado, cancela-se o original (com motivo e nome de quem cancelou) e cria-se um novo</li>
+      <li>Registros cancelados ficam visíveis em cinza no Histórico com o motivo e responsável</li>
+    </ul>
+
+    <div class="danger-note">
+      <div class="callout-title">🚫 Responsabilidade</div>
+      <p>
+        Todo cancelamento fica gravado com o nome do gestor responsável.
+        Use essa função apenas quando realmente necessário.
+        Cancelamentos injustificados ou em massa podem configurar fraude trabalhista.
+      </p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="glossario">Glossário</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Termo</th><th>Definição</th></tr></thead>
+        <tbody>
+          <tr><td><strong>AFD</strong></td><td>Arquivo Fonte de Dados — arquivo .txt no formato REP-A exigido pela Portaria 671/2021 para comprovação de jornada</td></tr>
+          <tr><td><strong>Soft-delete</strong></td><td>Inativação lógica: o registro permanece no banco mas é excluído das listas operacionais</td></tr>
+          <tr><td><strong>PIN</strong></td><td>Código numérico (até 8 dígitos) que o colaborador usa para se autenticar ao bater ponto</td></tr>
+          <tr><td><strong>Visto diário</strong></td><td>Revisão de supervisão dos registros de ponto de cada colaborador, realizada geralmente no dia seguinte</td></tr>
+          <tr><td><strong>Aceite eletrônico</strong></td><td>Assinatura digital da folha mensal, com registro do nome do colaborador, data e hora exatos</td></tr>
+          <tr><td><strong>SSO</strong></td><td>Single Sign-On — acesso sem nova senha, usando credenciais de outro sistema (ex.: AULA)</td></tr>
+          <tr><td><strong>JWT</strong></td><td>JSON Web Token — formato do token de autenticação usado pelo sistema</td></tr>
+          <tr><td><strong>Tenant</strong></td><td>Organização no sistema — cada empresa tem seu conjunto isolado de colaboradores e registros</td></tr>
+          <tr><td><strong>REP-A</strong></td><td>Registrador Eletrônico de Ponto Alternativo — modalidade de software homologada pela Portaria 671</td></tr>
+          <tr><td><strong>NSR</strong></td><td>Número Sequencial de Registro — contador incremental de cada marcação no arquivo AFD</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="faq">Perguntas Frequentes</h2>
+
+    <h3>O sistema funciona no celular?</h3>
+    <p>
+      Sim. O sistema é responsivo e funciona em qualquer navegador moderno no celular (Chrome, Safari, Firefox).
+      Não é necessário instalar aplicativo. Basta acessar <a href="https://ponto.alexandre.pro.br/system/">ponto.alexandre.pro.br/system/</a>.
+    </p>
+
+    <h3>O que acontece se o colaborador esquecer o PIN?</h3>
+    <p>
+      O gestor pode redefinir o PIN a qualquer momento editando o cadastro do colaborador na aba Funcionários.
+      O novo PIN substitui o anterior — sem confirmação do anterior.
+    </p>
+
+    <h3>Posso ter mais de um gestor com acesso?</h3>
+    <p>
+      Sim. Cada gestor é um registro independente na tabela <code>ponto_admins</code>.
+      Para adicionar gestores, entre em contato com o suporte — o cadastro de admins ainda não está disponível via interface self-service.
+    </p>
+
+    <h3>O histórico é perdido ao inativar um colaborador?</h3>
+    <p>
+      Não. Todos os registros de ponto são mantidos permanentemente (soft-delete).
+      Se precisar consultar o histórico de um colaborador inativo, acesse a aba Histórico, selecione o colaborador
+      (ele aparece na lista ao selecionar "Todos os funcionários") e filtre pelo período.
+    </p>
+
+    <h3>Qual é o limite de registros por consulta no Histórico?</h3>
+    <p>A tela retorna até 500 registros por consulta. Para períodos longos, use filtros de data mais curtos ou exporte o AFD completo.</p>
+
+    <h3>Posso exportar o AFD de qualquer período?</h3>
+    <p>
+      Sim. Se não informar datas no filtro, o AFD incluirá todos os registros da organização.
+      Recomenda-se exportar mensalmente e arquivar o arquivo.
+    </p>
+
+    <h3>Como funciona o acesso multi-unidade (Redes)?</h3>
+    <p>
+      No plano Redes, cada unidade é uma organização independente com seu próprio painel de acesso.
+      A organização-mãe pode visualizar relatórios consolidados de todas as filiais.
+      Para contratar, acesse a seção de planos e clique em "Solicitar plano Redes".
+    </p>
+
+    <h3>O sistema fica disponível 24 horas?</h3>
+    <p>
+      O backend roda em infraestrutura de nuvem (fly.io) com alta disponibilidade.
+      O frontend fica hospedado no GitHub Pages, também com disponibilidade contínua.
+      Eventuais manutenções são realizadas em horários de baixo uso.
+    </p>
+
+    <h3>Como garantir que a sessão não expira durante o turno?</h3>
+    <p>
+      O token JWT tem validade de 30 dias. Para turnos longos, o sistema não exige reautenticação durante o uso.
+      Se a sessão expirar, basta fazer login novamente — os dados salvos no servidor não são afetados.
+    </p>
+
+    <hr>
+
+    <p style="font-size:13px;color:var(--muted);text-align:center">
+      Ponto — Controle de Jornada &nbsp;·&nbsp;
+      <a href="https://ponto.alexandre.pro.br" target="_blank">ponto.alexandre.pro.br</a>
+      &nbsp;·&nbsp; Suporte: <a href="mailto:contato@ponto.alexandre.pro.br">contato@ponto.alexandre.pro.br</a>
+    </p>
+
+  </main>
+</div>
+
+<script>
+  // Marca link ativo conforme a seção visível
+  const headings = document.querySelectorAll('h2[id], h3[id]');
+  const links     = document.querySelectorAll('.nav-link');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  headings.forEach(h => observer.observe(h));
+</script>
+
+</body>
+</html>
