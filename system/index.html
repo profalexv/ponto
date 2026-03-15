@@ -51,6 +51,19 @@
     </div>
   </div>
 
+  <!-- Seletor de empresa (mesmo login em múltiplas organizações) -->
+  <div id="app-org-select" class="hidden">
+    <div class="login-box" style="max-width:420px">
+      <div class="login-logo">
+        <span style="font-size:40px">🏢</span>
+        <h1 class="login-title" style="font-size:22px">Selecione a empresa</h1>
+        <p class="login-subtitle">Seu login tem acesso a múltiplas organizações.</p>
+      </div>
+      <div id="org-select-list" style="display:flex;flex-direction:column;gap:10px;margin:16px 0"></div>
+      <button class="btn btn-ghost" id="org-select-back" style="width:100%;margin-top:4px">← Usar outra conta</button>
+    </div>
+  </div>
+
   <!-- Aplicação principal -->
   <div id="app" class="hidden">
     <header class="app-header">
@@ -62,6 +75,7 @@
         <div id="app-header-org" class="app-header-org"></div>
         <div class="app-header-actions">
           <button class="btn btn-ponto-punch" id="ponto-btn-bater">⏱️ Bater Ponto</button>
+          <button class="btn btn-ghost" id="ponto-btn-sair" style="font-size:13px">Sair</button>
         </div>
       </div>
     </header>

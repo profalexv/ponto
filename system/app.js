@@ -949,6 +949,15 @@ async function openPunchModal() {
     return;
   }
 
+  // Detecta nomes duplicados para exibir cargo/depto como desambiguação
+  const nameCount = {};
+  employees.forEach(e => { nameCount[e.name] = (nameCount[e.name] || 0) + 1; });
+  const empLabel = (e) => {
+    if (nameCount[e.name] <= 1) return E(e.name);
+    const extra = [e.department, e.role].filter(Boolean).join(' · ');
+    return `${E(e.name)}${extra ? ` <small style="color:#6b7280">(${E(extra)})</small>` : ''}`;
+  };
+
   openModal({
     title: '⏱️ Registrar Ponto',
     bodyHtml: `
@@ -956,7 +965,7 @@ async function openPunchModal() {
         <label>Funcionário *</label>
         <select id="punch-emp">
           <option value="">Selecione...</option>
-          ${employees.map(e => `<option value="${e.id}" data-gps="${e.gps_consent ? '1' : '0'}">${E(e.name)}</option>`).join('')}
+          ${employees.map(e => `<option value="${e.id}" data-gps="${e.gps_consent ? '1' : '0'}">${empLabel(e)}</option>`).join('')}
         </select>
       </div>
       <div class="form-group">
@@ -1047,6 +1056,76 @@ function switchTab(name) {
    LOGIN DIRETO (sem SSO)
    ═════════════════════════════════════════════════════════════ */
 
+/* ─── LOGIN DIRETO + SELEÇÃO DE EMPRESA ───────────────────────────────── */
+
+/**
+ * Esconde todas as telas de autenticação.
+ */
+function hideAuthScreens() {
+  ['app-login', 'app-org-select', 'app'].forEach(id => {
+    document.getElementById(id)?.classList.add('hidden');
+  });
+}
+
+/**
+ * Exibe a tela de seleção de empresa após login multi-org.
+ * A junção das contas é exclusivamente por LOGIN (mesmo e-mail + mesma senha).
+ * Se o gestor tiver logins diferentes por empresa, nunca chegará aqui.
+ */
+function showOrgSelectScreen(orgs, selectionToken) {
+  hideAuthScreens();
+  const screen = document.getElementById('app-org-select');
+  const list   = document.getElementById('org-select-list');
+  screen.classList.remove('hidden');
+
+  list.innerHTML = orgs.map(org => `
+    <button class="btn btn-outline org-select-btn" style="text-align:left;padding:14px 16px;border-radius:10px;display:flex;align-items:center;gap:12px" data-org-id="${E(org.orgId)}">
+      <span style="font-size:22px">🏢</span>
+      <span style="font-size:15px;font-weight:600;color:#111827">${E(org.orgName)}</span>
+    </button>`).join('');
+
+  list.querySelectorAll('.org-select-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.style.opacity = '0.6';
+      try {
+        await doSelectOrg(selectionToken, btn.dataset.orgId);
+        screen.classList.add('hidden');
+        startApp();
+      } catch (err) {
+        showToast(err.message, 'error');
+        btn.disabled  = false;
+        btn.style.opacity = '1';
+      }
+    });
+  });
+
+  document.getElementById('org-select-back').onclick = () => {
+    screen.classList.add('hidden');
+    clearSession();
+    showLoginForm();
+  };
+}
+
+/**
+ * Segunda etapa do login multi-org: troca selectionToken + orgId por JWT.
+ */
+async function doSelectOrg(selectionToken, orgId) {
+  const resp = await fetch(`${MOTOR_URL}/api/ponto/auth/select-org`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ selectionToken, orgId }),
+  });
+  const body = await resp.json();
+  if (!resp.ok) throw new Error(body.error || 'Erro ao selecionar empresa.');
+  _token = body.token;
+  _orgId = body.orgId;
+  localStorage.setItem('ponto_token',    body.token);
+  localStorage.setItem('ponto_org_id',   body.orgId);
+  localStorage.setItem('ponto_login_at', Date.now().toString());
+  return body;
+}
+
 async function doLogin(email, password) {
   const resp = await fetch(`${MOTOR_URL}/api/ponto/auth/login`, {
     method: 'POST',
@@ -1055,6 +1134,13 @@ async function doLogin(email, password) {
   });
   const body = await resp.json();
   if (!resp.ok) throw new Error(body.error || 'Credenciais inválidas.');
+
+  // Login com múltiplas empresas: encaminha para o seletor
+  if (body.multiOrg) {
+    showOrgSelectScreen(body.orgs, body.selectionToken);
+    return null; // startApp será chamado dentro do seletor
+  }
+
   _token = body.token;
   _orgId = body.orgId;
   localStorage.setItem('ponto_token',   body.token);
@@ -1085,7 +1171,12 @@ function showLoginForm() {
     submitBtn.disabled    = true;
     submitBtn.textContent = 'Entrando...';
     try {
-      await doLogin(email, password);
+      const result = await doLogin(email, password);
+      // multiOrg: doLogin já exibiu o seletor; não chama startApp aqui
+      if (result === null) {
+        document.getElementById('app-login').classList.add('hidden');
+        return;
+      }
       document.getElementById('app-login').classList.add('hidden');
       startApp();
     } catch (err) {
@@ -1118,6 +1209,12 @@ function startApp() {
 
   // Botão principal "Bater Ponto"
   document.getElementById('ponto-btn-bater')?.addEventListener('click', openPunchModal);
+
+  // Botão Sair
+  document.getElementById('ponto-btn-sair')?.addEventListener('click', () => {
+    clearSession();
+    window.location.href = '/system/';
+  });
 
   // Carrega aba inicial
   switchTab('hoje');

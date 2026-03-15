@@ -523,6 +523,12 @@
     const links  = document.getElementById('nav-links');
     toggle.addEventListener('click', () => links.classList.toggle('open'));
     links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
+
+    // Se há token salvo (sessão válida ou expirada), vai direto para /system/.
+    // O app.js de lá decide: abre o painel (válido) ou exibe o login (expirado).
+    if (localStorage.getItem('ponto_token')) {
+      window.location.replace('/system/');
+    }
   </script>
 
 </body>
