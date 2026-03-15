@@ -150,6 +150,9 @@ header nav { display: flex; align-items: center; justify-content: space-between;
 .pricing-redes-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .pricing-redes-tags span { background: var(--brand-light); color: var(--brand); border-radius: 6px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
 
+.pricing-free-note { text-align: center; font-size: 11px; color: #d1d5db; margin-top: 10px; }
+.pricing-free-note a { color: #d1d5db; text-decoration: underline; }
+
 .pricing-discount { margin-top: 28px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 18px 24px; display: flex; align-items: center; gap: 14px; }
 .pricing-discount-icon { font-size: 28px; flex-shrink: 0; }
 .pricing-discount p { font-size: 14px; color: #065f46; margin: 0; }
