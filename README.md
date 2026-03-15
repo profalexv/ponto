@@ -3,8 +3,7 @@
 > **URL:** `https://ponto.alexandre.pro.br` (GitHub Pages)
 
 Sistema **independente** de controle de jornada de trabalho.  
-Pode ser contratado por **qualquer empresa** — comércio, indústria, saúde, serviços, escolas, redes, etc.  
-Não exige integração com o AULA; quando integrado, `ponto_organizations.aula_school_id` aponta para `app_schools(id)` e a organização recebe 20% de desconto.
+Pode ser contratado por **qualquer empresa** — comércio, indústria, saúde, serviços, escolas, redes, etc.
 
 ## Situação atual
 
@@ -22,7 +21,7 @@ O código está implementado dentro do repositório `app`:
 ## Schema de Banco (Supabase PostgreSQL)
 
 ```
-ponto_organizations          ← tenant raiz (qualquer empresa; aula_school_id opcional)
+ponto_organizations          ← tenant raiz (qualquer empresa)
   └── ponto_employees        ← colaboradores (org_id → ponto_organizations)
         └── ponto_records    ← batimentos IMUTÁVEIS (org_id + employee_id)
         └── ponto_signatures ← aceite mensal da folha (eletrônico ou scan)
@@ -37,7 +36,7 @@ Redes:
 
 **Princípios do design:**
 - `ponto_organizations` é o tenant raiz — representa qualquer empresa
-- `aula_school_id` é opcional: preenchido apenas para escolas integradas ao AULA
+- Campo `aula_school_id` é gerido internamente pela integração `scholar/ponto`; não exposto neste frontend
 - Nenhuma tabela referencia `app_schools` como FK obrigatória
 - IDs de organização são UUID (sistema independente)
 - Colaboradores nunca são excluídos fisicamente (soft delete via `deleted_at`)
@@ -49,9 +48,9 @@ Qualquer empresa acessa `https://ponto.alexandre.pro.br` com e-mail e senha.
 O gestor é cadastrado em `ponto_admins` com senha em bcrypt.  
 JWT emitido com `{ userId, orgId, role: 'ponto_admin' }`.
 
-### SSO via AULA (escolas integradas)
-O painel do AULA redireciona para `https://ponto.alexandre.pro.br?token=JWT&orgId=UUID`.  
-O token JWT já é válido (mesmo `JWT_SECRET`). Nenhum novo login é solicitado.
+### SSO via token JWT
+Aceita redirecionamentos com `?token=JWT&orgId=UUID` (token emitido pelo motor com o mesmo `JWT_SECRET`).  
+Nenhum novo login é solicitado. Este mecanismo é usado pela interface `scholar/ponto` do AULA.
 
 ## Funcionalidades
 
@@ -78,9 +77,7 @@ O token JWT já é válido (mesmo `JWT_SECRET`). Nenhum novo login é solicitado
 | **Máximo** | R$ 980 | até 150 | +R$6/colaborador |
 | **Redes** | sob consulta | ilimitado (multi-unidade) | — |
 
-> **Desconto de 20%** para empresas/escolas com contrato ativo do **AULA.app** (aplicado sobre qualquer plano).
-
 ### Plano Redes
-Destinado a redes de empresas ou redes de escolas que precisam gerenciar múltiplas unidades sob um único contrato.  
+Destinado a redes de empresas ou instituições que precisam gerenciar múltiplas unidades sob um único contrato.  
 Cada unidade é uma `ponto_organization` com `parent_org_id` apontando para a organização-mãe.  
 Cobrança e relatórios consolidados na organização-mãe. Preço negociado conforme volume.

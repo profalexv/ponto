@@ -6,7 +6,7 @@
  *
  * Autenticação:
  *   Login direto → formulário e-mail/senha (ponto_admins)
- *   SSO (AULA)   → ?token=JWT&orgId=UUID passados pelo painel da escola
+ *   SSO          → ?token=JWT&orgId=UUID (token pré-emitido com mesmo JWT_SECRET)
  *
  * API: https://aula-motor.fly.dev/api/ponto/*
  * Conformidade: CLT Art. 74 / Portaria MTP 671/2021 (REP-A) / LGPD
@@ -904,8 +904,8 @@ async function renderAssinatura(container) {
         </div>
       </div>
       <p style="color:#6b7280;font-size:13px;margin-top:8px">
-        Para alterar ou cancelar o plano, acesse 
-        <a href="https://aula.alexandre.pro.br" target="_blank" rel="noopener" style="color:#2563eb">aula.alexandre.pro.br</a>.
+        Para alterar ou cancelar o plano, acesse
+        <a href="/plano/" style="color:#2563eb">Gerenciar Plano</a>.
       </p>`;
   } catch (e) {
     container.innerHTML = `<div class="ponto-error">Erro: ${E(e.message)}</div>`;
@@ -1099,7 +1099,7 @@ function startApp() {
 }
 
 (function init() {
-  // 1. SSO via AULA: ?token=JWT&orgId=UUID (passados pelo painel da escola)
+  // 1. SSO: ?token=JWT&orgId=UUID (redirecionamento com token pré-válido)
   const params   = new URLSearchParams(window.location.search);
   const urlToken = params.get('token');
   const urlOrgId = params.get('orgId');
