@@ -47,6 +47,24 @@ function typeBadge(type) {
   return `<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;color:${t.color};background:${t.bg}">${t.label}</span>`;
 }
 
+/* ─── Sessão ────────────────────────────────────────────────── */
+const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 horas em ms
+
+function clearSession() {
+  _token = null;
+  _orgId = null;
+  localStorage.removeItem('ponto_token');
+  localStorage.removeItem('ponto_org_id');
+  localStorage.removeItem('ponto_login_at');
+}
+
+function sessionExpired() {
+  clearSession();
+  document.getElementById('app').classList.add('hidden');
+  showLoginForm();
+  showToast('Sessão encerrada. Faça login novamente.', 'warning');
+}
+
 /* ─── API helper ─────────────────────────────────────────────── */
 async function api(path, options = {}) {
   const url = `${MOTOR_URL}/api/ponto${path}`;
@@ -58,6 +76,12 @@ async function api(path, options = {}) {
       ...(options.headers || {}),
     },
   });
+
+  // Token expirado ou inválido: encerra sessão imediatamente
+  if (resp.status === 401) {
+    sessionExpired();
+    throw new Error('Sessão expirada. Faça login novamente.');
+  }
 
   let body;
   const ct = resp.headers.get('content-type') || '';
@@ -1033,8 +1057,9 @@ async function doLogin(email, password) {
   if (!resp.ok) throw new Error(body.error || 'Credenciais inválidas.');
   _token = body.token;
   _orgId = body.orgId;
-  localStorage.setItem('ponto_token',  body.token);
-  localStorage.setItem('ponto_org_id', body.orgId);
+  localStorage.setItem('ponto_token',   body.token);
+  localStorage.setItem('ponto_org_id',  body.orgId);
+  localStorage.setItem('ponto_login_at', Date.now().toString());
   return body;
 }
 
@@ -1106,7 +1131,8 @@ function startApp() {
 
   if (urlToken) {
     _token = urlToken;
-    localStorage.setItem('ponto_token', urlToken);
+    localStorage.setItem('ponto_token',   urlToken);
+    localStorage.setItem('ponto_login_at', Date.now().toString());
   } else {
     _token = localStorage.getItem('ponto_token');
   }
@@ -1129,6 +1155,14 @@ function startApp() {
     return;
   }
 
-  // 3. Token presente (SSO ou sessão salva): inicia a aplicação
+  // 3. Verifica se a sessão local passou de 24h
+  const loginAt = parseInt(localStorage.getItem('ponto_login_at') || '0', 10);
+  if (!loginAt || Date.now() - loginAt > SESSION_TTL) {
+    clearSession();
+    showLoginForm();
+    return;
+  }
+
+  // 4. Token presente e sessão válida: inicia a aplicação
   startApp();
 })();
