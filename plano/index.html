@@ -197,7 +197,8 @@
       badge.textContent = st.active ? 'Ativo' : 'Inativo';
       badge.className   = `plan-badge ${st.active ? 'plan-badge-active' : 'plan-badge-inactive'}`;
 
-      const planLabel = PLANS.find(p => p.id === st.plan)?.label || st.plan || '—';
+      const planLabel = PLANS.find(p => p.id === st.plan)?.label
+        || (st.plan === 'free' ? 'Free (Gratuito)' : st.plan === 'trial' ? 'Trial (Experiência)' : st.plan || '—');
       document.getElementById('plan-name').textContent = planLabel;
 
       const maxEmps = st.maxEmployees ?? 0;
@@ -209,10 +210,10 @@
           ? `R$${PLANS.find(p => p.id === st.plan).extra}/colab.`
           : '—';
 
-      if (st.expiresAt) {
-        const d = new Date(st.expiresAt);
+      if (st.trialExpiresAt || st.expiresAt) {
+        const d = new Date(st.trialExpiresAt || st.expiresAt);
         document.getElementById('expires-info').textContent =
-          `Válido até ${d.toLocaleDateString('pt-BR')}`;
+          `${st.plan === 'trial' ? 'Trial expira em' : 'Válido até'} ${d.toLocaleDateString('pt-BR')}`;
       }
 
       if (maxEmps > 0) {
@@ -233,7 +234,14 @@
 
   function renderPlansGrid(currentPlan) {
     const grid = document.getElementById('plans-grid');
-    grid.innerHTML = PLANS.map(p => `
+    let prefix = '';
+    if (currentPlan === 'free' || currentPlan === 'trial') {
+      const msg = currentPlan === 'free'
+        ? 'Você está no plano <strong>Free</strong> — até 2 colaboradores, gratuitamente para sempre.'
+        : 'Você está no período <strong>Trial</strong> — até 10 colaboradores por 35 dias.';
+      prefix = `<p style="grid-column:1/-1;font-size:12px;color:var(--muted);text-align:center;margin-bottom:8px">${msg} Para ampliar, escolha um plano abaixo.</p>`;
+    }
+    grid.innerHTML = prefix + PLANS.map(p => `
       <div class="plan-option${p.id === currentPlan ? ' selected' : ''}" data-plan="${p.id}" onclick="selectPlan('${p.id}')">
         <h4>${E(p.label)}</h4>
         <div class="plan-price">${E(p.price)}<small>${E(p.period)}</small></div>
