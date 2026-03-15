@@ -36,7 +36,7 @@ Redes:
 
 **Princípios do design:**
 - `ponto_organizations` é o tenant raiz — representa qualquer empresa
-- Campo `aula_school_id` é gerido internamente pela integração `scholar/ponto`; não exposto neste frontend
+- Campo `aula_school_id` é FK opcional para integração com AULA (NULL quando cliente independente); não exposto neste frontend
 - Nenhuma tabela referencia `app_schools` como FK obrigatória
 - IDs de organização são UUID (sistema independente)
 - Colaboradores nunca são excluídos fisicamente (soft delete via `deleted_at`)
@@ -50,7 +50,7 @@ JWT emitido com `{ userId, orgId, role: 'ponto_admin' }`.
 
 ### SSO via token JWT
 Aceita redirecionamentos com `?token=JWT&orgId=UUID` (token emitido pelo motor com o mesmo `JWT_SECRET`).  
-Nenhum novo login é solicitado. Este mecanismo é usado pela interface `scholar/ponto` do AULA.
+Nenhum novo login é solicitado. Usado pelos clientes AULA que acessam via painel da escola.
 
 ## Funcionalidades
 
