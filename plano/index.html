@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ponto — Gerenciar Plano</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand:      #0f766e;
+      --brand-dark: #0d5e57;
+      --brand-light:#ccfbf1;
+      --text:       #111827;
+      --muted:      #6b7280;
+      --border:     #e5e7eb;
+      --bg:         #f9fafb;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100vh;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ── Toast ── */
+    #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+    .toast-success { background: #16a34a; }
+    .toast-error   { background: #dc2626; }
+    .toast-info    { background: #2563eb; }
+
+    /* ── Header ── */
+    .page-header {
+      background: linear-gradient(135deg, #065f46 0%, #0f766e 100%);
+      color: #fff; padding: 0 24px;
+    }
+    .page-header-inner {
+      max-width: 860px; margin: 0 auto;
+      display: flex; align-items: center; gap: 16px; height: 56px;
+    }
+    .page-logo { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 800; }
+    .page-logo a { color: #fff; text-decoration: none; opacity: .8; font-size: 13px; font-weight: 500; }
+    .page-logo a:hover { opacity: 1; }
+    .page-logo-sep { opacity: .4; }
+
+    /* ── Layout ── */
+    .container { max-width: 860px; margin: 0 auto; padding: 32px 24px; }
+
+    /* ── Auth ── */
+    #view-login { display: flex; justify-content: center; align-items: center; min-height: calc(100vh - 56px); }
+    .login-box {
+      background: #fff; border: 1px solid var(--border); border-radius: 14px;
+      padding: 36px 32px; width: 100%; max-width: 360px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.07);
+    }
+    .login-title { font-size: 19px; font-weight: 800; margin-bottom: 4px; }
+    .login-sub   { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+    .form-group  { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 13px; font-family: inherit; color: var(--text); background: #fff;
+      transition: border-color .15s;
+    }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(15,118,110,.1); }
+    .login-err { color: #dc2626; font-size: 13px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; }
+
+    /* ── Botões ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: background .15s, opacity .15s; text-decoration: none;
+    }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-primary  { background: var(--brand); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--brand-dark); }
+    .btn-ghost    { background: #f3f4f6; color: #374151; border: 1px solid var(--border); }
+    .btn-ghost:hover:not(:disabled)   { background: #e5e7eb; }
+    .btn-danger   { background: #dc2626; color: #fff; }
+    .btn-danger:hover:not(:disabled)  { background: #b91c1c; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-full { width: 100%; justify-content: center; }
+
+    /* ── Cards ── */
+    .card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+    .card-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .card-sub   { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+
+    /* ── Status do plano ── */
+    .plan-status-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .plan-badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+    .plan-badge-active   { background: #d1fae5; color: #065f46; }
+    .plan-badge-inactive { background: #fee2e2; color: #991b1b; }
+    .plan-badge-trial    { background: #fef3c7; color: #92400e; }
+
+    .plan-info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+    .plan-info-item label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); display: block; margin-bottom: 2px; }
+    .plan-info-item span  { font-size: 15px; font-weight: 700; color: var(--text); }
+
+    .usage-bar-wrap { margin-top: 16px; }
+    .usage-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .usage-bar { background: var(--border); border-radius: 6px; height: 8px; overflow: hidden; }
+    .usage-bar-fill { height: 100%; background: var(--brand); border-radius: 6px; transition: width .3s; }
+    .usage-bar-fill.warn { background: #f59e0b; }
+    .usage-bar-fill.danger { background: #dc2626; }
+
+    /* ── Tabela de planos ── */
+    .plans-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 16px; }
+    .plan-option {
+      border: 1.5px solid var(--border); border-radius: 10px; padding: 18px 16px;
+      cursor: pointer; transition: border-color .15s, box-shadow .15s;
+    }
+    .plan-option:hover       { border-color: var(--brand); }
+    .plan-option.selected    { border-color: var(--brand); background: #f0fdfa; box-shadow: 0 0 0 3px rgba(15,118,110,.12); }
+    .plan-option h4          { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    .plan-option .plan-price { font-size: 19px; font-weight: 800; color: var(--brand); }
+    .plan-option .plan-price small { font-size: 12px; font-weight: 400; color: var(--muted); }
+    .plan-option .plan-desc  { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* ── Histórico ── */
+    .table-wrap { overflow-x: auto; margin-top: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 8px 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); border-bottom: 2px solid var(--border); }
+    td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── Responsivo ── */
+    @media (max-width: 600px) {
+      .plan-info-grid { grid-template-columns: 1fr 1fr; }
+      .plans-grid     { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toast-container"></div>
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div class="page-logo">
+        <span>🕐</span>
+        <span>Ponto</span>
+        <span class="page-logo-sep">&rsaquo;</span>
+        <a href="/system/">Sistema</a>
+        <span class="page-logo-sep">&rsaquo;</span>
+        <span>Meu Plano</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="view-login">
+    <div class="login-box">
+      <div class="login-title">🕐 Gerenciar Plano</div>
+      <p class="login-sub">Informe as credenciais do gestor para continuar.</p>
+      <div id="login-err" class="login-err hidden"></div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="l-email">E-mail</label>
+          <input type="email" id="l-email" placeholder="gestor@empresa.com.br" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label for="l-pass">Senha</label>
+          <input type="password" id="l-pass" placeholder="Sua senha" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" id="login-btn">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- PAINEL PRINCIPAL -->
+  <div id="view-main" class="hidden">
+    <div class="container">
+
+      <!-- Status atual do plano -->
+      <div class="card" id="card-status">
+        <div class="card-title">Plano atual</div>
+        <div class="card-sub" id="org-name-sub">Carregando...</div>
+        <div class="plan-status-row">
+          <span id="status-badge" class="plan-badge">—</span>
+          <span id="plan-name" style="font-weight:700;font-size:15px">—</span>
+          <span id="expires-info" style="font-size:13px;color:var(--muted)"></span>
+        </div>
+        <div class="plan-info-grid">
+          <div class="plan-info-item">
+            <label>Colaboradores inclusos</label>
+            <span id="plan-max">—</span>
+          </div>
+          <div class="plan-info-item">
+            <label>Colaboradores ativos</label>
+            <span id="plan-used">—</span>
+          </div>
+          <div class="plan-info-item">
+            <label>Custo extra/colab.</label>
+            <span id="plan-extra-price">—</span>
+          </div>
+        </div>
+        <div class="usage-bar-wrap" id="usage-wrap" style="display:none">
+          <div class="usage-bar-label">
+            <span>Uso de colaboradores</span>
+            <span id="usage-pct">—</span>
+          </div>
+          <div class="usage-bar">
+            <div class="usage-bar-fill" id="usage-fill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mudar de plano -->
+      <div class="card">
+        <div class="card-title">Alterar plano</div>
+        <div class="card-sub">Selecione o plano desejado. A mudança entra em vigor no próximo ciclo de cobrança.</div>
+        <div class="plans-grid" id="plans-grid">
+          <!-- preenchido por JS -->
+        </div>
+        <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="btn-change-plan" disabled>Confirmar mudança de plano</button>
+          <button class="btn btn-ghost" id="btn-contact-redes">🏢 Solicitar plano Redes</button>
+        </div>
+      </div>
+
+      <!-- Histórico de ciclos -->
+      <div class="card">
+        <div class="card-title">Histórico de ciclos</div>
+        <div class="card-sub">Últimos registros de cobrança e uso.</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Período</th>
+                <th>Plano</th>
+                <th>Colaboradores</th>
+                <th>Valor</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="history-body">
+              <tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+  /* ── Configuração ── */
+  const MOTOR = 'https://aula-motor.fly.dev';
+  let _token = null;
+  let _orgId = null;
+  let _selectedPlan = null;
+
+  const PLANS = [
+    { id: 'per_employee', label: 'Por Colaborador', price: 'a partir de R$10', period: '/colab./mês', desc: 'Ideal para equipes pequenas. R$20 (1–8) · R$16 (9–16) · R$10 (17+)', max: 0, extra: null },
+    { id: 'mini',         label: 'Mini',            price: 'R$ 340',           period: '/mês',         desc: 'Até 30 colaboradores. +R$10/extra.', max: 30, extra: 10 },
+    { id: 'pronto',       label: 'Pronto',          price: 'R$ 640',           period: '/mês',         desc: 'Até 80 colaboradores. +R$10/extra.', max: 80, extra: 10 },
+    { id: 'maximo',       label: 'Máximo',          price: 'R$ 980',           period: '/mês',         desc: 'Até 150 colaboradores. +R$6/extra.',  max: 150, extra: 6 },
+  ];
+
+  /* ── Helpers ── */
+  const E = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  function toast(msg, type = 'info') {
+    const el = document.createElement('div');
+    el.className = `toast toast-${type}`;
+    el.textContent = msg;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 350); }, 3500);
+  }
+
+  async function api(path, opts = {}) {
+    const resp = await fetch(`${MOTOR}/api/ponto${path}`, {
+      ...opts,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_token}`, ...(opts.headers || {}) },
+    });
+    const ct = resp.headers.get('content-type') || '';
+    const body = ct.includes('json') ? await resp.json() : await resp.text();
+    if (!resp.ok) throw new Error((body?.error || body) || `Erro ${resp.status}`);
+    return body?.data ?? body;
+  }
+
+  /* ── Login ── */
+  document.getElementById('login-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const errEl = document.getElementById('login-err');
+    const btn   = document.getElementById('login-btn');
+    errEl.classList.add('hidden');
+    btn.disabled = true; btn.textContent = 'Entrando...';
+    try {
+      const email    = document.getElementById('l-email').value.trim();
+      const password = document.getElementById('l-pass').value;
+      const resp = await fetch(`${MOTOR}/api/ponto/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const body = await resp.json();
+      if (!resp.ok) throw new Error(body.error || 'Credenciais inválidas.');
+      _token = body.token;
+      _orgId = body.orgId;
+      localStorage.setItem('plano_token',  _token);
+      localStorage.setItem('plano_org_id', _orgId);
+      document.getElementById('view-login').classList.add('hidden');
+      document.getElementById('view-main').classList.remove('hidden');
+      loadDashboard();
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.classList.remove('hidden');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Entrar';
+    }
+  });
+
+  /* ── Dashboard ── */
+  async function loadDashboard() {
+    try {
+      const st = await api(`/status?orgId=${_orgId}`);
+      document.getElementById('org-name-sub').textContent = st.orgName || '';
+
+      const badge = document.getElementById('status-badge');
+      badge.textContent = st.active ? 'Ativo' : 'Inativo';
+      badge.className   = `plan-badge ${st.active ? 'plan-badge-active' : 'plan-badge-inactive'}`;
+
+      const planLabel = PLANS.find(p => p.id === st.plan)?.label || st.plan || '—';
+      document.getElementById('plan-name').textContent = planLabel;
+
+      const maxEmps = st.maxEmployees ?? 0;
+      const usedEmps = st.employeeCount ?? 0;
+      document.getElementById('plan-max').textContent  = maxEmps > 0 ? maxEmps : 'Ilimitado';
+      document.getElementById('plan-used').textContent = usedEmps;
+      document.getElementById('plan-extra-price').textContent =
+        PLANS.find(p => p.id === st.plan)?.extra != null
+          ? `R$${PLANS.find(p => p.id === st.plan).extra}/colab.`
+          : '—';
+
+      if (st.expiresAt) {
+        const d = new Date(st.expiresAt);
+        document.getElementById('expires-info').textContent =
+          `Válido até ${d.toLocaleDateString('pt-BR')}`;
+      }
+
+      if (maxEmps > 0) {
+        const pct = Math.min(100, Math.round((usedEmps / maxEmps) * 100));
+        const fill = document.getElementById('usage-fill');
+        fill.style.width = pct + '%';
+        fill.className   = `usage-bar-fill${pct >= 100 ? ' danger' : pct >= 80 ? ' warn' : ''}`;
+        document.getElementById('usage-pct').textContent = `${usedEmps} / ${maxEmps} (${pct}%)`;
+        document.getElementById('usage-wrap').style.display = '';
+      }
+
+      renderPlansGrid(st.plan);
+      loadHistory();
+    } catch (e) {
+      toast('Erro ao carregar plano: ' + e.message, 'error');
+    }
+  }
+
+  function renderPlansGrid(currentPlan) {
+    const grid = document.getElementById('plans-grid');
+    grid.innerHTML = PLANS.map(p => `
+      <div class="plan-option${p.id === currentPlan ? ' selected' : ''}" data-plan="${p.id}" onclick="selectPlan('${p.id}')">
+        <h4>${E(p.label)}</h4>
+        <div class="plan-price">${E(p.price)}<small>${E(p.period)}</small></div>
+        <div class="plan-desc">${E(p.desc)}</div>
+      </div>`).join('');
+    _selectedPlan = currentPlan;
+    document.getElementById('btn-change-plan').disabled = true;
+  }
+
+  function selectPlan(id) {
+    _selectedPlan = id;
+    document.querySelectorAll('.plan-option').forEach(el =>
+      el.classList.toggle('selected', el.dataset.plan === id));
+    // Habilita o botão apenas se for diferente do plano atual
+    document.getElementById('btn-change-plan').disabled = false;
+  }
+
+  document.getElementById('btn-change-plan').addEventListener('click', async () => {
+    if (!_selectedPlan) return;
+    const plan = PLANS.find(p => p.id === _selectedPlan);
+    if (!confirm(`Confirmar mudança para o plano ${plan?.label}?\nA mudança entra em vigor no próximo ciclo.`)) return;
+    try {
+      await api(`/plan?orgId=${_orgId}`, { method: 'PUT', body: JSON.stringify({ plan_type: _selectedPlan }) });
+      toast('Plano atualizado com sucesso!', 'success');
+      loadDashboard();
+    } catch (e) { toast('Erro ao alterar plano: ' + e.message, 'error'); }
+  });
+
+  document.getElementById('btn-contact-redes').addEventListener('click', () => {
+    window.location.href = 'mailto:contato@ponto.alexandre.pro.br?subject=Plano%20Redes%20-%20Solicita%C3%A7%C3%A3o';
+  });
+
+  async function loadHistory() {
+    const tbody = document.getElementById('history-body');
+    try {
+      const rows = await api(`/plan/history?orgId=${_orgId}`);
+      if (!rows?.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">Nenhum histórico disponível.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td>${E(r.period)}</td>
+          <td>${E(r.plan_label || r.plan_type)}</td>
+          <td>${E(r.employee_count)}</td>
+          <td>${E(r.amount != null ? 'R$ ' + Number(r.amount).toFixed(2).replace('.', ',') : '—')}</td>
+          <td><span class="plan-badge ${r.status === 'paid' ? 'plan-badge-active' : 'plan-badge-inactive'}">${E(r.status === 'paid' ? 'Pago' : r.status)}</span></td>
+        </tr>`).join('');
+    } catch (_) {
+      tbody.innerHTML = `<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">Histórico indisponível.</td></tr>`;
+    }
+  }
+
+  /* ── Auto-login por token salvo ou SSO ── */
+  (function init() {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get('token') || localStorage.getItem('plano_token');
+    const o = params.get('orgId') || localStorage.getItem('plano_org_id');
+    if (t && o) {
+      _token = t; _orgId = o;
+      localStorage.setItem('plano_token', t);
+      localStorage.setItem('plano_org_id', o);
+      if (params.get('token')) window.history.replaceState({}, '', window.location.pathname);
+      document.getElementById('view-login').classList.add('hidden');
+      document.getElementById('view-main').classList.remove('hidden');
+      loadDashboard();
+    }
+  })();
+  </script>
+
+</body>
+</html>

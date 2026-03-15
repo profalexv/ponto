@@ -1,0 +1,447 @@
+/* ─── Reset & Base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: #111827;
+  background: #f9fafb;
+  min-height: 100vh;
+}
+
+/* ─── Utilitários ──────────────────────────────────────────── */
+.hidden { display: none !important; }
+
+/* ─── Botões ───────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  text-decoration: none;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary  { background: #2563eb; color: #fff; }
+.btn-primary:hover:not(:disabled)  { background: #1d4ed8; }
+.btn-ghost    { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+.btn-ghost:hover:not(:disabled)    { background: #e5e7eb; }
+.btn-danger   { background: #dc2626; color: #fff; }
+.btn-danger:hover:not(:disabled)   { background: #b91c1c; }
+.btn-success  { background: #16a34a; color: #fff; }
+.btn-success:hover:not(:disabled)  { background: #15803d; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* ─── Inputs ───────────────────────────────────────────────── */
+input, select, textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #111827;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+input.input-sm, select.input-sm { width: auto; padding: 5px 8px; }
+
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+/* ─── Login Form ───────────────────────────────────────────── */
+.login-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: #f9fafb;
+}
+
+.login-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 28px;
+}
+.login-title    { font-size: 26px; font-weight: 700; color: #111827; margin: 0; }
+.login-subtitle { font-size: 13px; color: #6b7280; margin: 0; }
+
+.login-form {
+  width: 100%;
+  max-width: 360px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 28px 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.login-form .form-group { margin-bottom: 16px; }
+
+.login-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 10px 16px;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.login-error {
+  color: #dc2626;
+  font-size: 13px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.login-footer {
+  margin-top: 20px;
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+  max-width: 360px;
+}
+.login-footer a { color: #6b7280; }
+
+/* ─── Header ───────────────────────────────────────────────── */
+.app-header {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.app-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 56px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+.app-logo-icon { font-size: 22px; }
+.app-header-org {
+  flex: 1;
+  font-size: 13px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-header-actions { margin-left: auto; }
+
+/* ─── Main layout ──────────────────────────────────────────── */
+.app-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.page-header h1 { font-size: 22px; font-weight: 700; color: #111827; }
+.subtitle { font-size: 13px; color: #6b7280; margin-top: 2px; }
+
+/* ─── Bater Ponto button ───────────────────────────────────── */
+.btn-ponto-punch {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.btn-ponto-punch:hover { opacity: 0.88; }
+
+/* ─── Tabs nav ─────────────────────────────────────────────── */
+.ponto-tabs-nav {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.ponto-tab {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 6px 6px 0 0;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -2px;
+}
+.ponto-tab:hover { color: #111827; background: #f3f4f6; }
+.ponto-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+
+/* ─── Tab content states ───────────────────────────────────── */
+.ponto-tab-content { min-height: 200px; }
+
+.ponto-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: #9ca3af;
+  font-size: 14px;
+}
+.ponto-loading::before {
+  content: '';
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 10px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.ponto-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.ponto-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+}
+
+/* ─── Section header ───────────────────────────────────────── */
+.ponto-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: #374151;
+}
+
+/* ─── Tables ───────────────────────────────────────────────── */
+.table-wrapper { overflow-x: auto; border-radius: 8px; border: 1px solid #e5e7eb; }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.data-table thead {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+.data-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+  vertical-align: middle;
+}
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover { background: #f9fafb; }
+.data-table tr.ponto-cancelled { opacity: 0.55; }
+
+/* ─── Employee card ────────────────────────────────────────── */
+.emp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.emp-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.emp-card-name { font-weight: 600; font-size: 14px; color: #111827; margin-bottom: 2px; }
+.emp-card-role { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
+.emp-card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; font-size: 11px; }
+.emp-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+.emp-badge-active   { background: #dcfce7; color: #16a34a; }
+.emp-badge-inactive { background: #f3f4f6; color: #9ca3af; }
+.emp-badge-gps      { background: #e0f2fe; color: #0369a1; }
+.emp-card-actions   { display: flex; gap: 8px; }
+
+/* ─── Ponto subscription ───────────────────────────────────── */
+.ponto-subscription-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px 24px;
+  max-width: 480px;
+  margin-bottom: 20px;
+}
+.ponto-sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+.ponto-sub-row:last-child { border-bottom: none; }
+.ponto-sub-label { font-size: 13px; color: #6b7280; }
+.ponto-sub-value { font-size: 13px; font-weight: 500; }
+
+.ponto-plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+.ponto-plan-card {
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+.ponto-plan-card:hover { border-color: #2563eb; }
+.ponto-plan-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.ponto-plan-card .price { font-size: 13px; font-weight: 600; color: #2563eb; margin: 4px 0; }
+.ponto-plan-card .desc  { font-size: 11px; color: #6b7280; margin-bottom: 12px; }
+
+/* ─── Toast ────────────────────────────────────────────────── */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: #1f2937;
+  color: #f9fafb;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  max-width: 320px;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: toast-in 0.2s ease forwards;
+  pointer-events: auto;
+}
+.toast.toast-success { background: #15803d; }
+.toast.toast-warning { background: #b45309; }
+.toast.toast-error   { background: #b91c1c; }
+@keyframes toast-in  { to { opacity: 1; transform: none; } }
+
+/* ─── Modal ────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+.modal-box {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.modal-title { font-size: 16px; font-weight: 700; color: #111827; }
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #9ca3af;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.modal-close-btn:hover { background: #f3f4f6; color: #374151; }
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid #e5e7eb;
+}

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ponto — Registro de Jornada</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Toast global -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- Modal global -->
+  <div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="modal-title" class="modal-title"></h2>
+        <button class="modal-close-btn" id="modal-close-btn" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer" id="modal-footer"></div>
+    </div>
+  </div>
+
+  <!-- Login direto (sem SSO) -->
+  <div id="app-login" class="hidden">
+    <div class="login-box">
+      <div class="login-logo">
+        <span style="font-size:48px">🕐</span>
+        <h1 class="login-title">Ponto</h1>
+        <p class="login-subtitle">Registro de Jornada de Colaboradores</p>
+      </div>
+      <form id="login-form" class="login-form" novalidate>
+        <div class="form-group">
+          <label for="login-email">E-mail</label>
+          <input type="email" id="login-email" placeholder="gestor@empresa.com.br"
+            autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label for="login-password">Senha</label>
+          <input type="password" id="login-password" placeholder="Sua senha"
+            autocomplete="current-password" required>
+        </div>
+        <div id="login-error" class="login-error hidden"></div>
+        <button type="submit" class="btn btn-primary login-btn" id="login-submit">Entrar</button>
+      </form>
+      <p class="login-footer">
+        Integrado ao <a href="https://app.alexandre.pro.br" target="_blank" rel="noopener">AULA</a>?
+        O acesso é feito automaticamente pelo painel da escola.
+      </p>
+    </div>
+  </div>
+
+  <!-- Aplicação principal -->
+  <div id="app" class="hidden">
+    <header class="app-header">
+      <div class="app-header-inner">
+        <div class="app-logo">
+          <span class="app-logo-icon">🕐</span>
+          <span class="app-logo-text">Ponto</span>
+        </div>
+        <div id="app-header-org" class="app-header-org"></div>
+        <div class="app-header-actions">
+          <button class="btn btn-ponto-punch" id="ponto-btn-bater">⏱️ Bater Ponto</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <div class="page-header">
+        <div>
+          <h1>Registro de Ponto</h1>
+          <p class="subtitle">Controle de jornada conforme CLT / Portaria MTP 671/2021</p>
+        </div>
+      </div>
+
+      <div class="ponto-tabs-nav" role="tablist">
+        <button class="ponto-tab active" data-ponto-tab="hoje" role="tab">📋 Hoje</button>
+        <button class="ponto-tab" data-ponto-tab="funcionarios" role="tab">👤 Funcionários</button>
+        <button class="ponto-tab" data-ponto-tab="historico" role="tab">📅 Histórico</button>
+        <button class="ponto-tab" data-ponto-tab="verificacao" role="tab">✅ Verificação</button>
+        <button class="ponto-tab" data-ponto-tab="folha" role="tab">📄 Folha Mensal</button>
+        <button class="ponto-tab" data-ponto-tab="assinatura" role="tab">💳 Assinatura</button>
+      </div>
+
+      <div id="ponto-tab-content" class="ponto-tab-content">
+        <div class="ponto-loading">Carregando...</div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
