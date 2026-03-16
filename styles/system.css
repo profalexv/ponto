@@ -115,6 +115,33 @@ input.input-sm, select.input-sm { width: auto; padding: 5px 8px; }
   margin-bottom: 12px;
 }
 
+/* toggle ver senha */
+.pass-wrap { position: relative; }
+.pass-wrap input { padding-right: 40px !important; }
+.pass-toggle {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: #9ca3af;
+  padding: 4px; line-height: 1; display: flex; align-items: center;
+}
+.pass-toggle:hover { color: #374151; }
+
+/* OAuth */
+.login-divider {
+  display: flex; align-items: center; gap: 10px; margin: 16px 0;
+  font-size: 12px; color: #9ca3af;
+}
+.login-divider::before, .login-divider::after {
+  content: ''; flex: 1; height: 1px; background: #e5e7eb;
+}
+.btn-oauth {
+  width: 100%; display: flex; align-items: center; justify-content: center;
+  gap: 9px; padding: 9px 16px; background: #fff;
+  border: 1px solid #e5e7eb; border-radius: 8px;
+  font-size: 13px; font-weight: 500; color: #374151; cursor: pointer;
+  transition: background .15s; margin-bottom: 8px; font-family: inherit;
+}
+.btn-oauth:hover { background: #f9fafb; border-color: #d1d5db; }
+
 .login-footer {
   margin-top: 20px;
   font-size: 12px;
@@ -362,6 +389,43 @@ input.input-sm, select.input-sm { width: auto; padding: 5px 8px; }
 .ponto-plan-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
 .ponto-plan-card .price { font-size: 13px; font-weight: 600; color: #2563eb; margin: 4px 0; }
 .ponto-plan-card .desc  { font-size: 11px; color: #6b7280; margin-bottom: 12px; }
+
+/* ─── Input small ──────────────────────────────────────────── */
+.input-sm {
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #111827;
+  background: #fff;
+}
+.input-sm:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.12); }
+
+/* ─── Config section ───────────────────────────────────────── */
+.config-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+}
+.config-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 12px 0;
+}
+.config-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 6px;
+}
+.config-toggle input[type="checkbox"] { cursor: pointer; width: 15px; height: 15px; accent-color: #2563eb; }
 
 /* ─── Toast ────────────────────────────────────────────────── */
 #toast-container {

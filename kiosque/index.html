@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Ponto — Kiosque</title>
+  <link rel="icon" href="/favicon.ico">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand:  #2563eb;
+      --green:  #16a34a;
+      --red:    #dc2626;
+      --yellow: #d97706;
+      --bg:     #f1f5f9;
+      --card:   #ffffff;
+      --border: #e2e8f0;
+      --text:   #0f172a;
+      --muted:  #64748b;
+      --radius: 16px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--text);
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    /* ─── Tela de carregamento / status ─── */
+    #kiosk-screen {
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .kiosk-logo {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+    .kiosk-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+    .kiosk-subtitle {
+      font-size: 15px;
+      color: var(--muted);
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    /* ─── Card ─── */
+    .kiosk-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      padding: 32px;
+      width: 100%;
+      max-width: 440px;
+    }
+
+    /* ─── Formulário de setup ─── */
+    .setup-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .setup-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      color: var(--text);
+      background: #f8fafc;
+      margin-bottom: 16px;
+      transition: border-color 0.15s;
+    }
+    .setup-input:focus {
+      outline: none;
+      border-color: var(--brand);
+      background: #fff;
+    }
+
+    /* ─── Botões ─── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s, transform 0.1s;
+      user-select: none;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--brand); color: #fff; width: 100%; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
+    .btn-ghost { background: #f1f5f9; color: var(--text); }
+    .btn-ghost:hover { background: #e2e8f0; }
+    .btn-success { background: var(--green); color: #fff; }
+    .btn-success:hover { background: #15803d; }
+    .btn-danger { background: var(--red); color: #fff; }
+
+    /* ─── Status aguardando autorização ─── */
+    .pending-icon { font-size: 56px; margin-bottom: 16px; animation: pulse 2s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+    .badge-active  { background: #dcfce7; color: #16a34a; }
+    .badge-blocked { background: #fee2e2; color: #dc2626; }
+
+    /* ─── Clock display ─── */
+    #kiosk-clock {
+      font-size: clamp(52px, 10vw, 88px);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -2px;
+      color: var(--brand);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    #kiosk-date {
+      font-size: 17px;
+      color: var(--muted);
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    #kiosk-org { font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+    #kiosk-device-name { font-size: 13px; color: #94a3b8; }
+
+    /* ─── Seleção de funcionário ─── */
+    .emp-search {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-size: 18px;
+      color: var(--text);
+      background: #f8fafc;
+      margin-bottom: 14px;
+      transition: border-color 0.15s;
+    }
+    .emp-search:focus { outline: none; border-color: var(--brand); background: #fff; }
+
+    .emp-list {
+      max-height: 260px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    .emp-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      transition: background 0.12s;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .emp-item:last-child { border-bottom: none; }
+    .emp-item:hover, .emp-item.selected { background: #eff6ff; }
+    .emp-item .emp-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    .emp-item-details { flex: 1; min-width: 0; }
+    .emp-item-name { font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .emp-item-role { font-size: 12px; color: var(--muted); }
+
+    /* ─── Teclado numérico PIN ─── */
+    .pin-display {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0 24px;
+    }
+    .pin-dot {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .pin-dot.filled { background: var(--brand); border-color: var(--brand); }
+
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      max-width: 300px;
+      margin: 0 auto 20px;
+    }
+    .numpad-key {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f8fafc;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      font-size: 24px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.1s, transform 0.1s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .numpad-key:hover { background: #e2e8f0; }
+    .numpad-key:active { transform: scale(0.92); background: var(--brand); color: #fff; border-color: var(--brand); }
+    .numpad-key.del { font-size: 20px; }
+    .numpad-key.confirm { background: var(--green); color: #fff; border-color: var(--green); }
+    .numpad-key.confirm:active { background: #15803d; }
+    .numpad-key.confirm:disabled { background: #86efac; border-color: #86efac; cursor: not-allowed; }
+
+    /* ─── Seletor de tipo de ponto ─── */
+    .type-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .type-btn {
+      padding: 18px 12px;
+      background: #f8fafc;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      line-height: 1.3;
+    }
+    .type-btn:hover { border-color: var(--brand); background: #eff6ff; }
+    .type-btn.selected { border-color: var(--brand); background: #dbeafe; color: var(--brand); }
+    .type-btn .type-icon { font-size: 24px; display: block; margin-bottom: 6px; }
+
+    /* ─── Confirmação de ponto ─── */
+    .punch-success {
+      text-align: center;
+      animation: fadeIn 0.3s ease;
+    }
+    .punch-success-icon { font-size: 72px; margin-bottom: 16px; }
+    .punch-success-name { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .punch-success-type { font-size: 16px; color: var(--muted); margin-bottom: 4px; }
+    .punch-success-time { font-size: 28px; font-weight: 700; color: var(--green); }
+
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+
+    /* ─── Mensagem de erro ─── */
+    .kiosk-error {
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: var(--red);
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    /* ─── Steps indicator ─── */
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      margin-bottom: 20px;
+      padding: 4px 0;
+    }
+    .back-btn:hover { color: var(--brand); }
+
+    /* ─── Tela fullscreen idle ─── */
+    .idle-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      color: #94a3b8;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    /* ─── Reset link ─── */
+    #kiosk-reset-link {
+      position: fixed;
+      bottom: 12px;
+      right: 16px;
+      font-size: 11px;
+      color: #cbd5e1;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+    #kiosk-reset-link:hover { color: var(--red); }
+
+    .loader {
+      width: 36px; height: 36px;
+      border: 3px solid #e2e8f0;
+      border-top-color: var(--brand);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 20px auto 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div id="kiosk-screen">
+  <!-- Conteúdo gerado pelo JS -->
+</div>
+
+<button id="kiosk-reset-link" title="Redefinir dispositivo">⚙ redefinir</button>
+
+<script>
+'use strict';
+
+const MOTOR_URL     = 'https://aula-motor.fly.dev';
+const KIOSK_STORE   = 'ponto_kiosk_v1';
+const IDLE_TIMEOUT  = 30_000; // ms sem interação → volta à tela inicial
+const POLL_INTERVAL = 8_000;  // ms para polling de status
+
+/* ─── Estado ────────────────────────────────────────────────── */
+let _state = {
+  orgId:       null,
+  hardwareId:  null,   // UUID gerado no primeiro setup
+  deviceId:    null,   // UUID do backend
+  deviceName:  null,
+  deviceStatus:'',     // pending | active | blocked
+  orgName:     '',
+  logoUrl:     null,   // URL da logo da organização
+  employees:   [],
+};
+let _idleTimer  = null;
+let _pollTimer  = null;
+let _clockTimer = null;
+
+/* ─── Persistência ──────────────────────────────────────────── */
+function loadState() {
+  try {
+    const raw = localStorage.getItem(KIOSK_STORE);
+    if (raw) Object.assign(_state, JSON.parse(raw));
+  } catch (_) {}
+}
+function saveState() {
+  const { orgId, hardwareId, deviceId, deviceName, deviceStatus, orgName, logoUrl } = _state;
+  localStorage.setItem(KIOSK_STORE, JSON.stringify({ orgId, hardwareId, deviceId, deviceName, deviceStatus, orgName, logoUrl }));
+}
+function clearState() {
+  localStorage.removeItem(KIOSK_STORE);
+  Object.assign(_state, { orgId: null, hardwareId: null, deviceId: null, deviceName: null, deviceStatus: '', orgName: '', logoUrl: null, employees: [] });
+}
+async function loadOrgInfo() {
+  if (!_state.orgId) return;
+  try {
+    const info = await kioskApi('GET', `/kiosk/info?org_id=${encodeURIComponent(_state.orgId)}`);
+    if (info.org_name) _state.orgName = info.org_name;
+    if (info.logo_url) _state.logoUrl = info.logo_url;
+    saveState();
+  } catch (_) { /* silencioso — não é crítico */ }
+}
+
+/* ─── UUID v4 simples ───────────────────────────────────────── */
+function uuidv4() {
+  if (crypto?.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+/* ─── API helper ────────────────────────────────────────────── */
+async function kioskApi(method, path, body = null) {
+  const resp = await fetch(`${MOTOR_URL}/api/ponto${path}`, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+  let data;
+  try { data = await resp.json(); } catch (_) { data = {}; }
+  if (!resp.ok) throw new Error(data?.error || data?.message || `Erro ${resp.status}`);
+  return data?.data ?? data;
+}
+
+/* ─── Escape HTML ───────────────────────────────────────────── */
+function E(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ─── Relógio ───────────────────────────────────────────────── */
+function startClock() {
+  clearInterval(_clockTimer);
+  const clockEl = document.getElementById('kiosk-clock');
+  const dateEl  = document.getElementById('kiosk-date');
+  if (!clockEl) return;
+
+  const update = () => {
+    const now = new Date();
+    clockEl.textContent = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    if (dateEl) {
+      dateEl.textContent = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+  };
+  update();
+  _clockTimer = setInterval(update, 1000);
+}
+
+/* ─── Idle reset ────────────────────────────────────────────── */
+function resetIdleTimer() {
+  clearTimeout(_idleTimer);
+  _idleTimer = setTimeout(() => showPunchScreen(), IDLE_TIMEOUT);
+}
+function bindIdle() {
+  ['touchstart', 'mousemove', 'keydown', 'click'].forEach(ev =>
+    document.addEventListener(ev, resetIdleTimer, { passive: true })
+  );
+}
+
+/* ─── Render helper ─────────────────────────────────────────── */
+function render(html) {
+  document.getElementById('kiosk-screen').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TELA 1 — SETUP (primeira vez)
+   ══════════════════════════════════════════════════════════════ */
+function showSetup(errorMsg = '') {
+  render(`
+    <div style="text-align:center">
+      <div class="kiosk-logo">🖥️</div>
+      <div class="kiosk-title">Ponto Kiosque</div>
+      <div class="kiosk-subtitle">Configure este dispositivo para começar</div>
+    </div>
+    <div class="kiosk-card">
+      <label class="setup-label">ID da Organização</label>
+      <input class="setup-input" id="setup-orgid" type="text"
+             placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+             value="${E(_state.orgId || '')}" autocomplete="off" spellcheck="false">
+      <label class="setup-label">Nome deste Dispositivo</label>
+      <input class="setup-input" id="setup-name" type="text"
+             placeholder="Ex: Totem Entrada Principal"
+             value="${E(_state.deviceName || '')}" maxlength="80">
+      ${errorMsg ? `<div class="kiosk-error">${E(errorMsg)}</div>` : ''}
+      <button class="btn btn-primary" id="setup-btn" style="margin-top:16px">Registrar Dispositivo</button>
+      <p style="font-size:12px;color:#94a3b8;margin-top:16px;text-align:center">
+        O ID da organização é fornecido pelo administrador do sistema Ponto.
+      </p>
+    </div>`);
+
+  document.getElementById('setup-btn')?.addEventListener('click', doSetup);
+  document.getElementById('setup-orgid')?.addEventListener('keydown', ev => { if (ev.key === 'Enter') doSetup(); });
+}
+
+async function doSetup() {
+  const orgId = document.getElementById('setup-orgid')?.value.trim();
+  const name  = document.getElementById('setup-name')?.value.trim();
+
+  if (!orgId || !/^[0-9a-f-]{36}$/i.test(orgId)) {
+    showSetup('ID da organização inválido. Deve ser um UUID no formato xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx');
+    return;
+  }
+  if (!name) { showSetup('Informe um nome para este dispositivo.'); return; }
+
+  const btn = document.getElementById('setup-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Registrando...'; }
+
+  // Garante hardware_id único persistente
+  if (!_state.hardwareId) _state.hardwareId = uuidv4();
+  _state.orgId      = orgId;
+  _state.deviceName = name;
+
+  try {
+    const result = await kioskApi('POST', '/kiosk/register', {
+      org_id:     orgId,
+      hardware_id: _state.hardwareId,
+      name,
+      platform:    navigator.platform || 'web',
+      model:       navigator.userAgent.substring(0, 100),
+      app_version: '1.0',
+    });
+    _state.deviceId     = result.device_id;
+    _state.deviceStatus = result.status;
+    _state.orgName      = result.org_name;
+    saveState();
+    boot();
+  } catch (e) {
+    showSetup(e.message);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TELA 2 — AGUARDANDO AUTORIZAÇÃO
+   ══════════════════════════════════════════════════════════════ */
+function logoHtml(style = '') {
+  if (!_state.logoUrl) return '';
+  return `<img src="${E(_state.logoUrl)}" alt="Logo" style="max-height:54px;max-width:180px;object-fit:contain;margin-bottom:12px${style ? ';' + style : ''}"
+         onerror="this.style.display='none'">`;
+}
+
+function showPending() {
+  clearInterval(_pollTimer);
+  render(`
+    <div style="text-align:center">
+      ${logoHtml()}
+      <div class="pending-icon">⏳</div>
+      <div class="kiosk-title" style="margin-bottom:4px">Aguardando Autorização</div>
+      <span class="status-badge badge-pending">⏳ Pendente</span>
+      <p style="color:var(--muted);font-size:15px;max-width:360px;text-align:center;line-height:1.6;margin-bottom:24px">
+        Dispositivo registrado como <strong>${E(_state.deviceName)}</strong>.<br>
+        O administrador precisa autorizar este dispositivo no painel ⚙️ Configurações → 🖥️ Dispositivos.
+      </p>
+      <div class="kiosk-card" style="max-width:360px">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:8px">ID da Organização:</p>
+        <code style="font-size:12px;word-break:break-all;color:#374151">${E(_state.orgId)}</code>
+      </div>
+      <div class="loader"></div>
+      <p style="font-size:12px;color:#94a3b8;margin-top:12px">Verificando a cada ${POLL_INTERVAL/1000}s…</p>
+    </div>`);
+
+  _pollTimer = setInterval(pollStatus, POLL_INTERVAL);
+}
+
+async function pollStatus() {
+  try {
+    const result = await kioskApi('GET', `/kiosk/status?org_id=${encodeURIComponent(_state.orgId)}&hardware_id=${encodeURIComponent(_state.hardwareId)}`);
+    _state.deviceStatus = result.status;
+    _state.orgName      = result.org_name || _state.orgName;
+    saveState();
+    if (result.status === 'active') {
+      clearInterval(_pollTimer);
+      showPunchScreen();
+    } else if (result.status === 'blocked') {
+      clearInterval(_pollTimer);
+      showBlocked();
+    }
+  } catch (_) { /* ignora erros de rede no polling */ }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TELA 3 — BLOQUEADO
+   ══════════════════════════════════════════════════════════════ */
+function showBlocked() {
+  render(`
+    <div style="text-align:center">
+      ${logoHtml()}
+      <div style="font-size:64px;margin-bottom:16px">🚫</div>
+      <div class="kiosk-title" style="color:var(--red);margin-bottom:4px">Dispositivo Bloqueado</div>
+      <span class="status-badge badge-blocked">🚫 Bloqueado</span>
+      <p style="color:var(--muted);font-size:15px;max-width:360px;text-align:center;margin-top:12px">
+        Este dispositivo foi bloqueado pelo administrador e não pode registrar pontos.<br>
+        Entre em contato com o responsável.
+      </p>
+    </div>`);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TELA 4 — PONTO (principal)
+   ══════════════════════════════════════════════════════════════ */
+async function showPunchScreen() {
+  clearTimeout(_idleTimer);
+
+  // Carrega lista de funcionários
+  let emps = _state.employees;
+  if (!emps.length) {
+    try {
+      emps = await kioskApi('POST', '/kiosk/employees', {
+        org_id: _state.orgId,
+        hardware_id: _state.hardwareId,
+      });
+      _state.employees = emps;
+    } catch (e) {
+      render(`<div class="kiosk-error" style="max-width:400px">${E(e.message)}</div>`);
+      return;
+    }
+  }
+
+  const now = new Date();
+
+  render(`
+    <div style="text-align:center;width:100%;max-width:500px">
+      ${_state.logoUrl ? `<img src="${E(_state.logoUrl)}" alt="Logo" style="max-height:50px;max-width:160px;object-fit:contain;margin-bottom:8px" onerror="this.style.display='none'">` : ''}
+      <div id="kiosk-org" style="font-size:14px;color:var(--muted);margin-bottom:2px">${E(_state.orgName)}</div>
+      <div id="kiosk-clock"></div>
+      <div id="kiosk-date"></div>
+      <div id="kiosk-device-name">🖥️ ${E(_state.deviceName)}</div>
+      <div style="height:20px"></div>
+    </div>
+    <div class="kiosk-card" style="max-width:500px;width:100%">
+      <input type="search" class="emp-search" id="emp-search" placeholder="🔍  Buscar funcionário..." autocomplete="off" autocorrect="off">
+      <div class="emp-list" id="emp-list">
+        ${renderEmpList(emps, '')}
+      </div>
+      <button class="btn btn-primary" id="punch-start-btn" disabled>Registrar Ponto</button>
+    </div>
+    <div class="idle-hint">Toque para bater ponto</div>`);
+
+  startClock();
+  resetIdleTimer();
+  bindIdle();
+
+  let selectedEmp = null;
+  const listEl    = document.getElementById('emp-list');
+  const searchEl  = document.getElementById('emp-search');
+  const startBtn  = document.getElementById('punch-start-btn');
+
+  searchEl?.addEventListener('input', () => {
+    listEl.innerHTML = renderEmpList(emps, searchEl.value);
+    bindEmpItems();
+    selectedEmp = null;
+    if (startBtn) startBtn.disabled = true;
+  });
+
+  function bindEmpItems() {
+    listEl.querySelectorAll('.emp-item').forEach(el => {
+      el.addEventListener('click', () => {
+        listEl.querySelectorAll('.emp-item').forEach(e => e.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedEmp = emps.find(e => String(e.id) === el.dataset.empId);
+        if (startBtn) startBtn.disabled = !selectedEmp;
+      });
+    });
+  }
+  bindEmpItems();
+
+  startBtn?.addEventListener('click', () => {
+    if (selectedEmp) showTypeSelect(selectedEmp);
+  });
+}
+
+function renderEmpList(emps, query) {
+  const q = (query || '').toLowerCase().trim();
+  const filtered = q ? emps.filter(e => e.name.toLowerCase().includes(q)) : emps;
+  if (!filtered.length) return '<div style="padding:20px;text-align:center;color:var(--muted);font-size:14px">Nenhum funcionário encontrado.</div>';
+  return filtered.map(e => {
+    const initials = e.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    return `<div class="emp-item" data-emp-id="${e.id}">
+      <div class="emp-avatar">${E(initials)}</div>
+      <div class="emp-item-details">
+        <div class="emp-item-name">${E(e.name)}</div>
+        ${e.role ? `<div class="emp-item-role">${E(e.role)}${e.department ? ' · ' + E(e.department) : ''}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ──── Tela 4b: seleção do tipo de ponto ────────────────────── */
+function showTypeSelect(emp) {
+  render(`
+    <div class="kiosk-card" style="max-width:460px;width:100%">
+      <button class="back-btn" id="back-btn">← Voltar</button>
+      <div style="font-size:20px;font-weight:700;margin-bottom:4px">${E(emp.name)}</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:24px">${E(emp.role || '')}</div>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:12px">Qual tipo de registro?</p>
+      <div class="type-grid">
+        <button class="type-btn" data-type="entrada">
+          <span class="type-icon">▶️</span>Entrada
+        </button>
+        <button class="type-btn" data-type="saida">
+          <span class="type-icon">⏹️</span>Saída
+        </button>
+        <button class="type-btn" data-type="pausa_inicio">
+          <span class="type-icon">⏸️</span>Início de Pausa
+        </button>
+        <button class="type-btn" data-type="pausa_fim">
+          <span class="type-icon">▶️</span>Fim de Pausa
+        </button>
+      </div>
+    </div>`);
+
+  document.getElementById('back-btn')?.addEventListener('click', showPunchScreen);
+
+  document.querySelectorAll('.type-btn').forEach(btn => {
+    btn.addEventListener('click', () => showPinEntry(emp, btn.dataset.type));
+  });
+}
+
+/* ──── Tela 4c: entrada de PIN ───────────────────────────────── */
+const TYPE_LABELS = {
+  entrada:      '▶️ Entrada',
+  saida:        '⏹️ Saída',
+  pausa_inicio: '⏸️ Início de Pausa',
+  pausa_fim:    '▶️ Fim de Pausa',
+};
+
+let _pin = '';
+
+function showPinEntry(emp, type) {
+  _pin = '';
+  const maxPin = 8;
+
+  render(`
+    <div class="kiosk-card" style="max-width:380px;width:100%">
+      <button class="back-btn" id="back-btn">← Voltar</button>
+      <div style="text-align:center">
+        <div style="font-size:18px;font-weight:700">${E(emp.name)}</div>
+        <div style="font-size:14px;color:var(--brand);margin-bottom:4px">${E(TYPE_LABELS[type] || type)}</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Digite seu PIN</div>
+        <div class="pin-display" id="pin-display">
+          ${Array.from({length: 4}, (_, i) => `<div class="pin-dot" id="dot-${i}"></div>`).join('')}
+        </div>
+        <div class="numpad" id="numpad">
+          ${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k => {
+            if (k === '') return '<div></div>';
+            if (k === '⌫') return `<div class="numpad-key del" data-key="del">⌫</div>`;
+            return `<div class="numpad-key" data-key="${k}">${k}</div>`;
+          }).join('')}
+        </div>
+        <button class="btn btn-success" id="pin-confirm-btn" disabled>✅ Confirmar</button>
+        <div id="pin-error" class="kiosk-error" style="display:none;margin-top:12px"></div>
+      </div>
+    </div>`);
+
+  document.getElementById('back-btn')?.addEventListener('click', () => showTypeSelect(emp));
+
+  document.getElementById('numpad')?.addEventListener('click', ev => {
+    const key = ev.target.closest('.numpad-key')?.dataset.key;
+    if (!key) return;
+    if (key === 'del') {
+      _pin = _pin.slice(0, -1);
+    } else if (_pin.length < maxPin) {
+      _pin += key;
+    }
+    updatePinDisplay();
+  });
+
+  document.getElementById('pin-confirm-btn')?.addEventListener('click', () => submitPunch(emp, type));
+
+  function updatePinDisplay() {
+    const dots = document.getElementById('pin-display');
+    if (!dots) return;
+    for (let i = 0; i < 4; i++) {
+      const dot = document.getElementById(`dot-${i}`);
+      if (dot) dot.classList.toggle('filled', i < _pin.length);
+    }
+    const confirmBtn = document.getElementById('pin-confirm-btn');
+    if (confirmBtn) confirmBtn.disabled = _pin.length < 4;
+  }
+}
+
+/* ──── Registrar ponto ───────────────────────────────────────── */
+async function submitPunch(emp, type) {
+  const confirmBtn = document.getElementById('pin-confirm-btn');
+  const errorEl    = document.getElementById('pin-error');
+  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = 'Registrando...'; }
+
+  try {
+    const result = await kioskApi('POST', '/kiosk/punch', {
+      org_id:      _state.orgId,
+      hardware_id: _state.hardwareId,
+      employee_id: emp.id,
+      type,
+      pin:         _pin,
+    });
+
+    const time = new Date(result.punched_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    showSuccess(emp.name, type, time);
+  } catch (e) {
+    if (errorEl) { errorEl.textContent = e.message; errorEl.style.display = ''; }
+    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = '✅ Confirmar'; }
+    _pin = '';
+    for (let i = 0; i < 4; i++) {
+      document.getElementById(`dot-${i}`)?.classList.remove('filled');
+    }
+  }
+}
+
+/* ──── Tela de sucesso ───────────────────────────────────────── */
+function showSuccess(empName, type, time) {
+  render(`
+    <div class="punch-success kiosk-card" style="max-width:400px;width:100%">
+      ${_state.logoUrl ? `<img src="${E(_state.logoUrl)}" alt="Logo" style="max-height:44px;max-width:140px;object-fit:contain;margin-bottom:8px" onerror="this.style.display='none'">` : ''}
+      <div class="punch-success-icon">✅</div>
+      <div class="punch-success-name">${E(empName)}</div>
+      <div class="punch-success-type">${E(TYPE_LABELS[type] || type)}</div>
+      <div class="punch-success-time">${E(time)}</div>
+      <div style="height:24px"></div>
+      <button class="btn btn-primary" id="success-done-btn">Concluído</button>
+    </div>`);
+
+  document.getElementById('success-done-btn')?.addEventListener('click', showPunchScreen);
+
+  // Auto-retorna após 6s
+  setTimeout(() => showPunchScreen(), 6000);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BOOT
+   ══════════════════════════════════════════════════════════════ */
+function boot() {
+  clearInterval(_pollTimer);
+
+  if (!_state.orgId || !_state.hardwareId) {
+    showSetup();
+    return;
+  }
+
+  // Atualiza logo e nome da org em background (sem bloquear a UI)
+  loadOrgInfo();
+
+  switch (_state.deviceStatus) {
+    case 'active':  showPunchScreen(); break;
+    case 'blocked': showBlocked();    break;
+    default:        showPending();    break;
+  }
+}
+
+/* ─── Reset (botão oculto no rodapé) ────────────────────────── */
+document.getElementById('kiosk-reset-link')?.addEventListener('click', () => {
+  let clicks = parseInt(document.getElementById('kiosk-reset-link').dataset.clicks || '0', 10) + 1;
+  document.getElementById('kiosk-reset-link').dataset.clicks = clicks;
+  if (clicks >= 3) {
+    if (confirm('Redefinir configuração do kiosque? O dispositivo precisará ser registrado novamente.')) {
+      clearState();
+      clearInterval(_pollTimer);
+      clearInterval(_clockTimer);
+      clearTimeout(_idleTimer);
+      boot();
+    } else {
+      document.getElementById('kiosk-reset-link').dataset.clicks = '0';
+    }
+  }
+});
+
+/* ─── Init ──────────────────────────────────────────────────── */
+loadState();
+boot();
+</script>
+</body>
+</html>

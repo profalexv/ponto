@@ -32,6 +32,9 @@
     <a class="nav-link" href="#historico">Histórico</a>
     <a class="nav-link" href="#verificacao">Verificação</a>
     <a class="nav-link" href="#folha">Folha Mensal</a>
+    <a class="nav-link" href="#periodos">Períodos</a>
+    <a class="nav-link" href="#dispositivos">Dispositivos (Kiosque)</a>
+    <a class="nav-link" href="#configuracoes">Configurações</a>
     <a class="nav-link" href="#assinatura-plano">Gerenciar Plano</a>
 
     <div class="nav-section">Exportação</div>
@@ -56,7 +59,7 @@
       <h1>Ponto</h1>
       <p class="sub">Manual do Usuário — Controle Eletrônico de Jornada de Trabalho</p>
       <div class="cover-meta">
-        <div class="cover-meta-item"><strong>Versão</strong>1.0 · março/2026</div>
+        <div class="cover-meta-item"><strong>Versão</strong>2.0 · março/2026</div>
         <div class="cover-meta-item"><strong>Acesso</strong>ponto.alexandre.pro.br</div>
         <div class="cover-meta-item"><strong>Conformidade</strong>CLT Art. 74 · Portaria MTP 671/2021 · LGPD</div>
       </div>
@@ -255,7 +258,7 @@
     <div class="ui-mock">
       <div class="ui-mock-bar">
         🕐 Ponto &nbsp;|&nbsp; <span style="color:#374151">Nome da Empresa</span>
-        <span style="margin-left:auto">⏱️ Bater Ponto</span>
+        <span style="margin-left:auto">🖥️ Kiosque &nbsp; ⏱️ Bater Ponto</span>
       </div>
       <div class="ui-mock-body">
         <div class="tab-row">
@@ -264,6 +267,9 @@
           <span class="tab-item">📅 Histórico</span>
           <span class="tab-item">✅ Verificação</span>
           <span class="tab-item">📄 Folha Mensal</span>
+          <span class="tab-item">🗓️ Períodos</span>
+          <span class="tab-item">🖥️ Dispositivos</span>
+          <span class="tab-item">⚙️ Configurações</span>
           <span class="tab-item">💳 Assinatura</span>
         </div>
         <p style="color:#6b7280;font-size:12px">N registro(s) hoje · N funcionário(s)</p>
@@ -381,11 +387,39 @@
           <tr><td>Cargo</td><td><span class="badge badge-gray">Não</span></td><td>Ex: Auxiliar, Operador, Analista</td></tr>
           <tr><td>Departamento</td><td><span class="badge badge-gray">Não</span></td><td>Ex: RH, Produção, Administrativo</td></tr>
           <tr><td>E-mail</td><td><span class="badge badge-gray">Não</span></td><td>Para contato interno</td></tr>
+          <tr><td>Data de admissão</td><td><span class="badge badge-gray">Não</span></td><td>Usada na geração automática de documentos</td></tr>
           <tr><td>PIN</td><td><span class="badge badge-gray">Não</span></td><td>Código numérico de identificação na marcação</td></tr>
           <tr><td>Consentimento GPS</td><td><span class="badge badge-gray">Não</span></td><td>Habilita captura de localização durante o ponto</td></tr>
           <tr><td>Ativo</td><td>—</td><td>Visível só na edição. Desmarcar inativa o colaborador (não exclui histórico)</td></tr>
         </tbody>
       </table>
+    </div>
+
+    <h3>Foto do colaborador</h3>
+    <p>
+      O botão <strong>📷 Foto</strong> no card do colaborador permite cadastrar uma foto para identificação visual.
+      A imagem é armazenada em serviço externo (ex.: Google Drive público) — o sistema guarda apenas a URL.
+    </p>
+    <ul>
+      <li>Informe a URL pública da imagem (deve começar com <code>https://</code>)</li>
+      <li>Formatos suportados: JPG, PNG, WEBP</li>
+      <li>Quando a aba <strong>Configurações &gt; Foto do Colaborador</strong> estiver ativa, a foto será capturada automaticamente durante cada batimento</li>
+    </ul>
+
+    <h3>Documentos do colaborador</h3>
+    <p>
+      O botão <strong>📂 Docs</strong> no card abre o painel de documentos vinculados ao colaborador.
+      Aqui você pode:
+    </p>
+    <ul>
+      <li><strong>Arquivar documentos externos</strong> — registrar URL de documentos já armazenados (contratos assinados, termos, atestados)</li>
+      <li><strong>Gerar documentos automaticamente</strong> — clique em “📄 Gerar Documento” para criar contrato de trabalho, termo de GPS/LGPD, aviso de período de experincia e outros modelos pré-preenchidos com os dados do colaborador</li>
+      <li><strong>Imprimir</strong> — o documento gerado pode ser impresso direto do navegador com cabeçalho da empresa (logo + nome)</li>
+    </ul>
+
+    <div class="note">
+      <div class="callout-title">ℹ️ Armazenamento externo</div>
+      <p>O Ponto não armazena binários de documentos — apenas URLs e metadados (data, tipo, quem arquivou). Mantenha os arquivos em serviço confiável (Google Drive, OneDrive, Dropbox) com acesso controlado.</p>
     </div>
 
     <h3>Remover (inativar) colaborador</h3>
@@ -626,7 +660,125 @@
     </div>
 
     <!-- ─────────────────────────────────────────────── -->
-    <h2 id="assinatura-plano">Gerenciar Plano</h2>
+    <h2 id="periodos">Aba: Períodos Mensais</h2>
+
+    <p>
+      Controla os <strong>períodos de apuração</strong> da jornada. Cada período tem uma data de início e de fim,
+      podendo ser fechado manualmente pelo gestor ou automaticamente pelo sistema.
+    </p>
+
+    <h3>Dia de corte</h3>
+    <p>
+      Em <strong>Configurações &gt; Fechamento Mensal</strong>, defina o dia do mês (1–28) em que o período
+      encerra. Por exemplo: dia 25 significa que o período vai do dia 26 do mês anterior ao dia 25 do mês atual.
+      Quando é <strong>0</strong> (padrão), o período segue o calendário civil (1 ao último dia do mês).
+    </p>
+
+    <h3>Status dos períodos</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Status</th><th>Significa</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-green">🔓 Aberto</span></td><td>Período em andamento — novos registros são aceitos</td></tr>
+          <tr><td><span class="badge badge-red">🔒 Fechado</span></td><td>Período encerrado — folha gerada e arquivada, sem novos registros</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Fechar um período</h3>
+    <ol class="steps">
+      <li><div class="step-num">1</div><div class="step-body"><strong>Acesse a aba Períodos</strong><p>Você verá o período atual aberto e os anteriores já fechados.</p></div></li>
+      <li><div class="step-num">2</div><div class="step-body"><strong>Clique em “Fechar Período”</strong><p>Um modal de confirmação será exibido com resumo das marcações do período.</p></div></li>
+      <li><div class="step-num">3</div><div class="step-body"><strong>Confirme</strong><p>O período é fechado e um novo período é aberto automaticamente a partir da data de corte.</p></div></li>
+    </ol>
+
+    <div class="tip">
+      <div class="callout-title">✅ Dica</div>
+      <p>Feche o período somente após todos os vistos de supervisão e assinaturas de folha estarem completos. Um período fechado não pode ser reaberto pela interface.</p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="dispositivos">Aba: Dispositivos (Kiosque)</h2>
+
+    <p>
+      O <strong>Kiosque</strong> é um terminal dedicado — um tablet, computador de recepção ou painel —
+      compartilhado entre vários colaboradores. O gestor autoriza cada dispositivo individualmente
+      antes que ele possa registrar ponto.
+    </p>
+
+    <h3>Como registrar um dispositivo</h3>
+    <ol class="steps">
+      <li><div class="step-num">1</div><div class="step-body"><strong>Abra o Kiosque no dispositivo</strong><p>Acesse <code>ponto.alexandre.pro.br/kiosque/</code> no navegador do dispositivo desejado.</p></div></li>
+      <li><div class="step-num">2</div><div class="step-body"><strong>Informe o ID da Organização e um nome</strong><p>O ID da organização está disponível na aba <strong>Dispositivos</strong> do painel (botão 📋 copiar). Dê um nome descritivo ao dispositivo (ex: <em>Recepção 1</em>, <em>Fábrica B</em>).</p></div></li>
+      <li><div class="step-num">3</div><div class="step-body"><strong>Autorize no painel</strong><p>No painel do gestor, vá em <strong>Dispositivos</strong>, localize o dispositivo com status <span class="badge badge-yellow">⏳ Pendente</span> e clique em “Autorizar”.</p></div></li>
+      <li><div class="step-num">4</div><div class="step-body"><strong>O kiosque entra em operação</strong><p>Automaticamente, a tela de seleção de funcionário aparecerá no dispositivo.</p></div></li>
+    </ol>
+
+    <h3>Como o colaborador usa o kiosque</h3>
+    <ol class="steps">
+      <li><div class="step-num">1</div><div class="step-body"><strong>Busca o próprio nome</strong><p>Digite as iniciais no campo de busca e toque no nome para selecioná-lo.</p></div></li>
+      <li><div class="step-num">2</div><div class="step-body"><strong>Escolhe o tipo de registro</strong><p>Entrada · Saída · Início de Pausa · Fim de Pausa.</p></div></li>
+      <li><div class="step-num">3</div><div class="step-body"><strong>Digita o PIN</strong><p>O teclado numérico aparece na tela. O PIN não é transmitido em texto puro — apenas seu hash é enviado.</p></div></li>
+      <li><div class="step-num">4</div><div class="step-body"><strong>Confirmação</strong><p>A tela de sucesso exibe nome, tipo e horário. Após 6 segundos, retorna automaticamente à tela inicial.</p></div></li>
+    </ol>
+
+    <h3>Gerenciar dispositivos</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ação</th><th>O que faz</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Autorizar</strong></td><td>Ativa o dispositivo pendente. A partir desse momento ele pode registrar ponto.</td></tr>
+          <tr><td><strong>Bloquear</strong></td><td>Impede o dispositivo de registrar novos pontos sem removê-lo do cadastro.</td></tr>
+          <tr><td><strong>Editar nome</strong></td><td>Renomeia o dispositivo para melhor identificação.</td></tr>
+          <tr><td><strong>Revogar</strong></td><td>Remove o dispositivo permanentemente (precisará se registrar novamente).</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <div class="callout-title">ℹ️ GPS no kiosque</div>
+      <p>O kiosque é um terminal fixo — GPS não é capturado. As marcações feitas pelo kiosque ficam identificadas com <code>origin: kiosk</code> no histórico.</p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="configuracoes">Aba: Configurações</h2>
+
+    <p>Concentra todas as opções avançadas da organização. As alterações só são salvas ao clicar em <strong>💾 Salvar Configurações</strong>.</p>
+
+    <h3>Identidade Visual</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Opção</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Nome de Exibição</strong></td><td>Nome que aparecerá nos documentos e no kiosque. Deixe em branco para usar o nome cadastrado na organização.</td></tr>
+          <tr><td><strong>URL da Logo</strong></td><td>URL pública da imagem da logo (deve começar com <code>https://</code>). Aparecerá no painel, documentos e kiosque. Use Google Drive ou CDN.</td></tr>
+          <tr><td><strong>Logo nos documentos</strong></td><td>Liga/desliga a exibição da logo em documentos gerados e impressos.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Registro de IP</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Opção</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Gravar IP nas marcações</strong></td><td>Registra o endereço IP de cada marcação. Útil para auditoria.</td></tr>
+          <tr><td><strong>Restringir por IP</strong></td><td>Bloqueia marcações que não venham dos IPs autorizados abaixo.</td></tr>
+          <tr><td><strong>Lista de IPs autorizados</strong></td><td>Insira os endereços separados por vírgula ou linha. Suporta IPv4 e IPv6. O painel do gestor nunca é bloqueado.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="warn">
+      <div class="callout-title">⚠️ Atenção ao ativar restrição por IP</div>
+      <p>Certifique-se de incluir o IP do local de trabalho antes de salvar. Se errar o IP e salvar, o sistema bloqueará as marcações. Use o painel (acesso do gestor não é bloqueado) para corrigir.</p>
+    </div>
+
+    <h3>Fechamento Mensal</h3>
+    <p>Defina o <strong>dia de corte</strong> (0 = dia último do mês, 1–28 = dia específico). Também é possível habilitar a geração automática de documentos ao fechar o período.</p>
+
+    <h3>Assinaturas</h3>
+    <p>Ative ou desative os métodos de assinatura da folha mensal: <strong>Aceite Eletrônico</strong> e/ou <strong>Upload de Scan Físico</strong>. Ao menos um deve estar ativo.</p>
 
     <p>
       O painel de gerenciamento de plano fica em
@@ -771,10 +923,16 @@
           <tr><td><strong>PIN</strong></td><td>Código numérico (até 8 dígitos) que o colaborador usa para se autenticar ao bater ponto</td></tr>
           <tr><td><strong>Visto diário</strong></td><td>Revisão de supervisão dos registros de ponto de cada colaborador, realizada geralmente no dia seguinte</td></tr>
           <tr><td><strong>Aceite eletrônico</strong></td><td>Assinatura digital da folha mensal, com registro do nome do colaborador, data e hora exatos</td></tr>
+          <tr><td><strong>Kiosque</strong></td><td>Terminal público compartilhado (tablet ou PC) onde os colaboradores batem ponto selecionando o próprio nome e digitando PIN</td></tr>
+          <tr><td><strong>Dia de corte</strong></td><td>Dia do mês em que o período de apuração encerra. Ex.: dia 25 = período vai do dia 26 ao dia 25 seguinte</td></tr>
+          <tr><td><strong>Período de apuração</strong></td><td>Intervalo de tempo (normalmente mensal) usado para calcular e fechar a jornada. Pode ou não coincidir com o mês civil</td></tr>
           <tr><td><strong>SSO</strong></td><td>Single Sign-On — acesso sem nova senha, usando credenciais de outro sistema (ex.: AULA)</td></tr>
           <tr><td><strong>JWT</strong></td><td>JSON Web Token — formato do token de autenticação usado pelo sistema</td></tr>
           <tr><td><strong>Tenant</strong></td><td>Organização no sistema — cada empresa tem seu conjunto isolado de colaboradores e registros</td></tr>
           <tr><td><strong>REP-A</strong></td><td>Registrador Eletrônico de Ponto Alternativo — modalidade de software homologada pela Portaria 671</td></tr>
+          <tr><td><strong>Kiosque</strong></td><td>Terminal público compartilhado (tablet ou PC) onde os colaboradores batem ponto selecionando o próprio nome e digitando PIN</td></tr>
+          <tr><td><strong>Dia de corte</strong></td><td>Dia do mês em que o período de apuração encerra. Ex.: dia 25 = período vai do dia 26 ao dia 25 seguinte</td></tr>
+          <tr><td><strong>Período de apuração</strong></td><td>Intervalo de tempo (normalmente mensal) usado para calcular e fechar a jornada; pode não coincidir com o mês civil</td></tr>
           <tr><td><strong>NSR</strong></td><td>Número Sequencial de Registro — contador incremental de cada marcação no arquivo AFD</td></tr>
         </tbody>
       </table>
@@ -822,6 +980,33 @@
       No plano Redes, cada unidade é uma organização independente com seu próprio painel de acesso.
       A organização-mãe pode visualizar relatórios consolidados de todas as filiais.
       Para contratar, acesse a seção de planos e clique em "Solicitar plano Redes".
+    </p>
+
+    <h3>Como configuro o kiosque?</h3>
+    <p>
+      Abra <code>ponto.alexandre.pro.br/kiosque/</code> no dispositivo que será o terminal, informe o
+      <strong>ID da Organização</strong> (disponível na aba Dispositivos do painel) e um nome para o terminal.
+      Depois, autorize o dispositivo no painel em <strong>Dispositivos → Autorizar</strong>.
+      Consulte a seção <a href="#dispositivos">Dispositivos (Kiosque)</a> deste manual para o passo a passo completo.
+    </p>
+
+    <h3>A restrição por IP bloqueia o painel do gestor?</h3>
+    <p>
+      Não. A restrição de IP se aplica apenas às <strong>marcações de ponto</strong>. O login e o painel
+      administrativo nunca são bloqueados por IP para garantir que o gestor sempre consiga corrigir a configuração.
+    </p>
+
+    <h3>Como altero o dia de fechamento do período?</h3>
+    <p>
+      Acesse <strong>Configurações → Fechamento Mensal</strong> e altere o "Dia de corte".
+      A alteração só afeta o próximo período — o período já aberto não é alterado.
+    </p>
+
+    <h3>Onde configuro a logo da empresa?</h3>
+    <p>
+      Em <strong>Configurações → Identidade Visual</strong>, informe a URL pública da logo (PNG, JPEG ou SVG
+      hospedado no Google Drive, OneDrive, CDN, etc.).
+      Ela aparecerá no cabeçalho do painel, nos documentos impressos e nas telas do kiosque.
     </p>
 
     <h3>O sistema fica disponível 24 horas?</h3>

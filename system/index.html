@@ -39,11 +39,25 @@
         </div>
         <div class="form-group">
           <label for="login-password">Senha</label>
-          <input type="password" id="login-password" placeholder="Sua senha"
-            autocomplete="current-password" required>
+          <div class="pass-wrap">
+            <input type="password" id="login-password" placeholder="Sua senha"
+              autocomplete="current-password" required>
+            <button type="button" class="pass-toggle" id="toggle-password" aria-label="Mostrar / ocultar senha">
+              <svg id="pass-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
         </div>
         <div id="login-error" class="login-error hidden"></div>
         <button type="submit" class="btn btn-primary login-btn" id="login-submit">Entrar</button>
+        <div class="login-divider">ou</div>
+        <button type="button" class="btn-oauth" id="btn-oauth-google">
+          <svg width="16" height="16" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+          Continuar com Google
+        </button>
+        <button type="button" class="btn-oauth" id="btn-oauth-microsoft">
+          <svg width="16" height="16" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="9" height="9" fill="#F25022"/><rect x="11" y="1" width="9" height="9" fill="#7FBA00"/><rect x="1" y="11" width="9" height="9" fill="#00A4EF"/><rect x="11" y="11" width="9" height="9" fill="#FFB900"/></svg>
+          Continuar com Microsoft
+        </button>
       </form>
       <p class="login-footer">
         Controle de jornada para qualquer empresa.
@@ -69,11 +83,13 @@
     <header class="app-header">
       <div class="app-header-inner">
         <div class="app-logo">
-          <span class="app-logo-icon">🕐</span>
+          <img id="app-header-logo" src="" alt="Logo" style="display:none;height:36px;width:auto;object-fit:contain;max-width:120px;border-radius:4px">
+          <span id="app-logo-icon-default" class="app-logo-icon">🕐</span>
           <span class="app-logo-text">Ponto</span>
         </div>
         <div id="app-header-org" class="app-header-org"></div>
         <div class="app-header-actions">
+          <a class="btn btn-ghost" href="/kiosque/" target="_blank" rel="noopener" style="font-size:13px" title="Abrir app kiosque em nova aba">🖥️ Kiosque</a>
           <button class="btn btn-ponto-punch" id="ponto-btn-bater">⏱️ Bater Ponto</button>
           <button class="btn btn-ghost" id="ponto-btn-sair" style="font-size:13px">Sair</button>
         </div>
@@ -94,6 +110,9 @@
         <button class="ponto-tab" data-ponto-tab="historico" role="tab">📅 Histórico</button>
         <button class="ponto-tab" data-ponto-tab="verificacao" role="tab">✅ Verificação</button>
         <button class="ponto-tab" data-ponto-tab="folha" role="tab">📄 Folha Mensal</button>
+        <button class="ponto-tab" data-ponto-tab="periodos" role="tab">🗓️ Períodos</button>
+        <button class="ponto-tab" data-ponto-tab="dispositivos" role="tab">🖥️ Dispositivos</button>
+        <button class="ponto-tab" data-ponto-tab="configuracoes" role="tab">⚙️ Configurações</button>
         <button class="ponto-tab" data-ponto-tab="assinatura" role="tab">💳 Assinatura</button>
       </div>
 
@@ -104,5 +123,99 @@
   </div>
 
   <script src="app.js"></script>
-</body>
+  <script src="https://accounts.google.com/gsi/client" async></script>
+  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js" async></script>
+  <script>
+  /* ── IDs OAuth — preencha com os client IDs do seu projeto ── */
+  const PONTO_GOOGLE_CLIENT_ID    = ''; // TODO: Google Console → OAuth 2.0 → Client ID
+  const PONTO_MICROSOFT_CLIENT_ID = ''; // TODO: Azure Portal  → App registrations → Application (client) ID
+
+  /* ── Toggle de senha ── */
+  (function () {
+    const inp = document.getElementById('login-password');
+    const btn = document.getElementById('toggle-password');
+    const ico = document.getElementById('pass-icon');
+    const EYE     = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    const EYE_OFF = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    btn.addEventListener('click', () => {
+      const show = inp.type === 'password';
+      inp.type   = show ? 'text' : 'password';
+      ico.innerHTML = show ? EYE_OFF : EYE;
+    });
+  })();
+
+  /* ── Callback compartilhado pós-OAuth ── */
+  async function _pontoOAuthCallback(endpoint, payload) {
+    const errEl = document.getElementById('login-error');
+    errEl.classList.add('hidden');
+    try {
+      const resp = await fetch(`${MOTOR_URL}/api/ponto/${endpoint}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Erro de autenticação.');
+      if (data.multiOrg) {
+        document.getElementById('app-login').classList.add('hidden');
+        showOrgSelectScreen(data.orgs, data.selectionToken);
+        return;
+      }
+      _token = data.token; _orgId = data.orgId;
+      localStorage.setItem('ponto_token',    data.token);
+      localStorage.setItem('ponto_org_id',   data.orgId);
+      localStorage.setItem('ponto_login_at', Date.now().toString());
+      document.getElementById('app-login').classList.add('hidden');
+      startApp();
+    } catch (e) {
+      errEl.textContent = e.message; errEl.classList.remove('hidden');
+    }
+  }
+
+  /* ── Google ── */
+  window.addEventListener('load', () => {
+    if (!PONTO_GOOGLE_CLIENT_ID) return;
+    if (typeof google === 'undefined') return;
+    google.accounts.id.initialize({
+      client_id: PONTO_GOOGLE_CLIENT_ID,
+      callback: (r) => _pontoOAuthCallback('auth/google', { credential: r.credential }),
+    });
+    document.getElementById('btn-oauth-google').addEventListener('click', () =>
+      google.accounts.id.prompt());
+  });
+  document.getElementById('btn-oauth-google').addEventListener('click', function () {
+    if (!PONTO_GOOGLE_CLIENT_ID) {
+      const errEl = document.getElementById('login-error');
+      errEl.textContent = 'Login com Google não configurado. Entre com e-mail e senha.';
+      errEl.classList.remove('hidden');
+    }
+  });
+
+  /* ── Microsoft ── */
+  let _msalInstance = null;
+  window.addEventListener('load', () => {
+    if (!PONTO_MICROSOFT_CLIENT_ID) return;
+    if (typeof msal === 'undefined') return;
+    _msalInstance = new msal.PublicClientApplication({
+      auth: { clientId: PONTO_MICROSOFT_CLIENT_ID, authority: 'https://login.microsoftonline.com/common', redirectUri: window.location.origin },
+      cache: { cacheLocation: 'sessionStorage' },
+    });
+  });
+  document.getElementById('btn-oauth-microsoft').addEventListener('click', async () => {
+    if (!PONTO_MICROSOFT_CLIENT_ID || !_msalInstance) {
+      const errEl = document.getElementById('login-error');
+      errEl.textContent = 'Login com Microsoft não configurado. Entre com e-mail e senha.';
+      errEl.classList.remove('hidden'); return;
+    }
+    try {
+      const r = await _msalInstance.loginPopup({ scopes: ['openid','profile','email','User.Read'] });
+      await _pontoOAuthCallback('auth/microsoft', { access_token: r.accessToken });
+    } catch (e) {
+      if (e?.errorCode !== 'user_cancelled') {
+        const errEl = document.getElementById('login-error');
+        errEl.textContent = e.message || 'Erro no login com Microsoft.';
+        errEl.classList.remove('hidden');
+      }
+    }
+  });
+  </script>
 </html>
