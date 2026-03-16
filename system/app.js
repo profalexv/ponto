@@ -290,6 +290,19 @@ function apiGet(path, params = {}) {
   return api(`${path}?${qs}`);
 }
 
+// Retorna o corpo completo da resposta (inclui nextCursor, etc)
+async function apiGetRaw(path, params = {}) {
+  const qs  = new URLSearchParams({ orgId: _orgId, ...params }).toString();
+  const url  = `${MOTOR_URL}/api/ponto${path}?${qs}`;
+  const resp = await fetch(url, {
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_token}` },
+  });
+  if (resp.status === 401) { sessionExpired(); throw new Error('Sessão expirada. Faça login novamente.'); }
+  const body = await resp.json();
+  if (!resp.ok) throw new Error(body?.error || `Erro ${resp.status}`);
+  return body;
+}
+
 function apiPost(path, body = {}) {
   return api(path, { method: 'POST', body: JSON.stringify({ org_id: _orgId, ...body }) });
 }
@@ -1946,18 +1959,22 @@ async function renderHistorico(container) {
   await doSearch();
 }
 
-async function loadHistorico({ dateFrom, dateTo, employeeId, onRefresh } = {}) {
+async function loadHistorico({ dateFrom, dateTo, employeeId, onRefresh, cursor, append } = {}) {
   const result = document.getElementById('ponto-hist-result');
   if (!result) return;
-  result.innerHTML = '<div class="ponto-loading">Carregando...</div>';
+  if (!append) result.innerHTML = '<div class="ponto-loading">Carregando...</div>';
   try {
-    const params = {};
+    const params = { limit: 100 };
     if (dateFrom)   params.dateFrom   = dateFrom;
     if (dateTo)     params.dateTo     = dateTo;
     if (employeeId) params.employeeId = employeeId;
-    const records = await apiGet('/records', params);
+    if (cursor)     params.cursor     = cursor;
 
-    if (!records?.length) {
+    const resp    = await apiGetRaw('/records', params);
+    const records = resp.data || [];
+    const nextCursor = resp.nextCursor || null;
+
+    if (!records.length && !append) {
       result.innerHTML = `<div class="ponto-empty"><p>Nenhum registro no período.</p></div>`;
       return;
     }
@@ -1977,20 +1994,41 @@ async function loadHistorico({ dateFrom, dateTo, employeeId, onRefresh } = {}) {
         </td>
       </tr>`).join('');
 
-    result.innerHTML = `
-      <div style="font-size:12px;color:#6b7280;padding:4px 0">${records.length} registro(s)</div>
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead><tr><th>Funcionário</th><th>Tipo</th><th>Horário</th><th>Origem</th><th>GPS</th><th>Ação</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
+    if (append) {
+      // remove botão anterior e acrescenta novas linhas
+      result.querySelector('#hist-load-more')?.remove();
+      result.querySelector('tbody').insertAdjacentHTML('beforeend', rows);
+      const countEl = result.querySelector('#hist-count');
+      if (countEl) countEl.textContent = result.querySelectorAll('tbody tr').length + ' registro(s)';
+    } else {
+      result.innerHTML = `
+        <div id="hist-count" style="font-size:12px;color:#6b7280;padding:4px 0">${records.length} registro(s)</div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>Funcionário</th><th>Tipo</th><th>Horário</th><th>Origem</th><th>GPS</th><th>Ação</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    }
 
-    result.querySelectorAll('.ponto-cancel-btn').forEach(btn => {
-      btn.addEventListener('click', () => openCancelRecordModal(parseInt(btn.dataset.recordId, 10), onRefresh));
+    if (nextCursor) {
+      const btn = document.createElement('button');
+      btn.id = 'hist-load-more';
+      btn.className = 'btn btn-ghost btn-sm';
+      btn.style.cssText = 'margin:8px 0;width:100%';
+      btn.textContent = 'Carregar mais registros…';
+      btn.addEventListener('click', () =>
+        loadHistorico({ dateFrom, dateTo, employeeId, onRefresh, cursor: nextCursor, append: true })
+      );
+      result.appendChild(btn);
+    }
+
+    result.querySelectorAll('.ponto-cancel-btn').forEach(b => {
+      b.addEventListener('click', () => openCancelRecordModal(parseInt(b.dataset.recordId, 10), onRefresh));
     });
   } catch (e) {
-    result.innerHTML = `<div class="ponto-error">Erro: ${E(e.message)}</div>`;
+    if (!append) result.innerHTML = `<div class="ponto-error">Erro: ${E(e.message)}</div>`;
+    else showToast('Erro ao carregar mais registros: ' + e.message, 'error');
   }
 }
 
