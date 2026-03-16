@@ -123,12 +123,24 @@
   </div>
 
   <script src="app.js"></script>
-  <script src="https://accounts.google.com/gsi/client" async></script>
-  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js" async></script>
   <script>
   /* ── IDs OAuth — preencha com os client IDs do seu projeto ── */
   const PONTO_GOOGLE_CLIENT_ID    = ''; // TODO: Google Console → OAuth 2.0 → Client ID
   const PONTO_MICROSOFT_CLIENT_ID = ''; // TODO: Azure Portal  → App registrations → Application (client) ID
+
+  /* Carrega SDKs OAuth apenas se os Client IDs estiverem configurados */
+  if (PONTO_GOOGLE_CLIENT_ID) {
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true;
+    document.head.appendChild(s);
+  }
+  if (PONTO_MICROSOFT_CLIENT_ID) {
+    const s = document.createElement('script');
+    s.src = 'https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js';
+    s.async = true;
+    document.head.appendChild(s);
+  }
 
   /* ── Toggle de senha ── */
   (function () {
