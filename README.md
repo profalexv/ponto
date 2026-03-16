@@ -5,6 +5,44 @@
 Sistema **independente** de controle de jornada de trabalho.  
 Pode ser contratado por **qualquer empresa** — comércio, indústria, saúde, serviços, escolas, redes, etc.
 
+---
+
+## Arquitetura e Regras de Desenvolvimento
+
+```
+ponto/ (frontend estático)          motor/ (API Node.js)          Supabase (PostgreSQL)
+  GitHub Pages                         Fly.io — São Paulo
+  ponto.alexandre.pro.br  ──HTTPS──►  aula-motor.fly.dev  ──────►  rgiaryfatyvsfgqjubmh
+```
+
+### Regras invioláveis
+
+1. **O frontend NUNCA acessa o Supabase diretamente.**  
+   Toda persistência de dados passa pelo motor (`https://aula-motor.fly.dev`).  
+   O frontend não conhece `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` nem nenhuma credencial de banco.
+
+2. **O motor no Fly.io é o único ponto de contato com o banco de dados.**  
+   Credenciais do Supabase ficam apenas no Fly.io (via `fly secrets set`) e nunca no código ou no `.env` de frontend.
+
+3. **Em desenvolvimento local, somente o frontend roda localmente.**  
+   Não existe "motor local" para o ponto — o frontend aponta sempre para `https://aula-motor.fly.dev`,  
+   tanto em produção quanto em testes locais (`localhost:xxxx`).  
+   O CORS do motor já permite `http://localhost:*` para desenvolvimento.
+
+4. **Migrations são aplicadas via Supabase CLI, nunca pelo frontend.**  
+   ```bash
+   cd motor/
+   supabase db push          # aplica migrações pendentes
+   ```
+
+5. **Seed de dados de teste** é executado via motor:
+   ```bash
+   cd motor/
+   npm run seed              # cria admin@teste.com / Teste@123 + org "Empresa Teste"
+   ```
+
+---
+
 ## Situação atual
 
 O código está implementado dentro do repositório `app`:
@@ -133,21 +171,6 @@ Disponível em qualquer plano. Instalamos banco de dados e interface nos servido
 
 Inclui todos os recursos do Máximo + suporte e manutenção mensal. Permite gestão de múltiplas empresas clientes. Contratação via contato direto.
 
-#### Plano PRO — Para escolas com aula.app (auto-hospedado)
-
-| Campo | Valor |
-|---|---|
-| Preço base | R$ 784/mês (CENTER −20% desconto aula.app) |
-| Colaboradores incluídos | até 150 |
-| Extra/colaborador | +R$4,80 |
-| Hospedagem | Auto-hospedado (SUPERPONTO incluso) |
-| Público-alvo | Escolas que utilizam o aula.app |
-
-Segue o preço do plano CENTER com o desconto de 20% aplicado a todos os usuários do aula.app. Inclui integração nativa com o painel aula.app, suporte e manutenção mensal. Contratação via contato direto.
-
----
-
-Todos os planos pagos incluem kiosque, restrição por IP, fotos, documentos e períodos configuráveis.
 
 ### Plano Redes
 Destinado a redes de empresas ou instituições que precisam gerenciar múltiplas unidades sob um único contrato.  
