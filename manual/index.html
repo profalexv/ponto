@@ -201,7 +201,7 @@
       <p>O plano <strong>Trial</strong> é ativado automaticamente ao cadastrar a organização e permite até <strong>10 colaboradores</strong> durante 35 dias. Ao final do período, a conta retorna ao plano <strong>Free</strong> (limite de 2 colaboradores ativos) até que um plano pago seja contratado. Os dados e histórico de ponto são preservados integralmente.</p>
     </div>
 
-    <h3>Planos pagos</h3>
+    <h3>Planos SaaS (hospedagem na nuvem)</h3>
 
     <div class="table-wrap">
       <table>
@@ -248,6 +248,11 @@
       </table>
     </div>
 
+    <div class="note">
+      <div class="callout-title">ℹ️ Desconto aula.app (planos SaaS)</div>
+      <p>Escolas que utilizam o <strong>AULA.app</strong> têm <strong>20% de desconto</strong> em qualquer plano SaaS ao acessar pelo painel da escola (SSO automático). Esse desconto não acumula com o plano PRO auto-hospedado.</p>
+    </div>
+
     <div class="warn">
       <div class="callout-title">⚠️ Limite de colaboradores</div>
       <p>
@@ -255,6 +260,57 @@
         O registro de ponto dos colaboradores já cadastrados continua funcionando normalmente.
         Para desbloquear, atualize o plano ou inative colaboradores que não estejam mais na empresa.
       </p>
+    </div>
+
+    <h3>Planos auto-hospedados e add-on SUPERPONTO</h3>
+
+    <p>
+      Para organizações que precisam de infraestrutura própria (banco de dados e interface instalados nos
+      servidores do cliente), estão disponíveis o add-on <strong>SUPERPONTO</strong> e dois planos
+      especializados. Esses planos requerem contratação direta via
+      <a href="mailto:contato@ponto.alexandre.pro.br">contato@ponto.alexandre.pro.br</a>.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Plano / Add-on</th>
+            <th>Preço</th>
+            <th>Colaboradores</th>
+            <th>Extra/colab.</th>
+            <th>Público-alvo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>☁️ SUPERPONTO</strong><br><small>Add-on de auto-hospedagem</small></td>
+            <td>+R$ 300/mês<br><small style="color:#6b7280">sobre qualquer plano</small></td>
+            <td>Igual ao plano base</td>
+            <td>Igual ao plano base</td>
+            <td>Qualquer empresa que queira banco de dados e interface nos próprios servidores. Ideal para redes.</td>
+          </tr>
+          <tr>
+            <td><strong>CENTER</strong><br><small>Auto-hospedado (SUPERPONTO incluso)</small></td>
+            <td>R$ 980/mês</td>
+            <td>até 150</td>
+            <td>+R$4,80 <small>(20% desc. vs. Máximo)</small></td>
+            <td>Departamentos de RH e Escritórios de Contabilidade. Permite gestão de múltiplas empresas-clientes.</td>
+          </tr>
+          <tr>
+            <td><strong>PRO</strong><br><small>Auto-hospedado (SUPERPONTO incluso)</small></td>
+            <td>R$ 784/mês<br><small style="color:#6b7280">(CENTER − 20% desconto aula.app)</small></td>
+            <td>até 150</td>
+            <td>+R$4,80</td>
+            <td>Escolas que utilizam o aula.app. Integração nativa com painel aula.app.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tip">
+      <div class="callout-title">✅ O que está incluso nos planos auto-hospedados</div>
+      <p>Nos planos CENTER e PRO (e no add-on SUPERPONTO) a equipe instala e configura banco de dados PostgreSQL e a interface diretamente nos servidores do cliente (cloud privada, VPS ou servidor local). O suporte e manutenção mensal estão inclusos no preço.</p>
     </div>
 
     <!-- ─────────────────────────────────────────────── -->
@@ -813,6 +869,8 @@
       </table>
     </div>
 
+    <h2 id="assinatura-plano">Gerenciar Plano</h2>
+
     <p>
       O painel de gerenciamento de plano fica em
       <a href="https://ponto.alexandre.pro.br/plano/" target="_blank">ponto.alexandre.pro.br/plano/</a>.
@@ -858,6 +916,17 @@
         Para múltiplas unidades (filiais, franquias, redes de escolas), clique em
         <strong>"Solicitar plano Redes"</strong> na tela de planos para entrar em contato.
         Cada unidade terá seu próprio painel de acesso com relatórios consolidados na matriz.
+      </p>
+    </div>
+
+    <div class="note">
+      <div class="callout-title">☁️ Planos auto-hospedados (CENTER, PRO e SUPERPONTO)</div>
+      <p>
+        Os planos <strong>CENTER</strong>, <strong>PRO (aula.app)</strong> e o add-on
+        <strong>SUPERPONTO</strong> são contratados diretamente por e-mail
+        (<a href="mailto:contato@ponto.alexandre.pro.br">contato@ponto.alexandre.pro.br</a>) e
+        <strong>não estão disponíveis para alteração self-service</strong> nesta tela.
+        Se você já possui um desses planos, ele aparecerá na seção "Planos especializados" como somente-leitura.
       </p>
     </div>
 
@@ -1131,6 +1200,33 @@
       No plano Redes, cada unidade é uma organização independente com seu próprio painel de acesso.
       A organização-mãe pode visualizar relatórios consolidados de todas as filiais.
       Para contratar, acesse a seção de planos e clique em "Solicitar plano Redes".
+    </p>
+
+    <h3>O que é o SUPERPONTO?</h3>
+    <p>
+      O <strong>SUPERPONTO</strong> é um add-on de auto-hospedagem disponível em qualquer plano (Por Colaborador, Mini, Pronto, Máximo ou Redes).
+      Ao contratar, a equipe instala tanto o banco de dados quanto a interface do Ponto nos servidores da sua empresa —
+      seja em cloud privada (AWS, Azure, GCP) ou servidor local — por um adicional de <strong>R$300/mês</strong> sobre o plano base.
+      A contratação é feita diretamente por <a href="mailto:contato@ponto.alexandre.pro.br">contato@ponto.alexandre.pro.br</a>.
+    </p>
+
+    <h3>O que é o plano CENTER?</h3>
+    <p>
+      O plano <strong>CENTER</strong> é exclusivo para <strong>departamentos de RH e escritórios de contabilidade</strong>.
+      É um plano auto-hospedado (inclui o SUPERPONTO) com o mesmo preço do plano Máximo (<strong>R$980/mês</strong>),
+      até 150 colaboradores e custo adicional de <strong>+R$4,80/colaborador</strong> (20% de desconto vs. Máximo).
+      Permite gerenciar ponto de múltiplas empresas-clientes a partir de um único acesso.
+      Contratação via <a href="mailto:contato@ponto.alexandre.pro.br">contato@ponto.alexandre.pro.br</a>.
+    </p>
+
+    <h3>O que é o plano PRO (aula.app)?</h3>
+    <p>
+      O plano <strong>PRO</strong> é destinado a <strong>escolas que já utilizam o aula.app</strong>.
+      É um plano auto-hospedado (inclui o SUPERPONTO) com o preço do plano CENTER reduzido em 20%
+      (desconto exclusivo aula.app), totalizando <strong>R$784/mês</strong>,
+      até 150 colaboradores e +R$4,80/colaborador extra.
+      Inclui integração nativa com o painel aula.app e suporte mensal incluso.
+      Contratação via <a href="mailto:contato@ponto.alexandre.pro.br">contato@ponto.alexandre.pro.br</a>.
     </p>
 
     <h3>Como configuro o kiosque?</h3>

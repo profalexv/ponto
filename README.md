@@ -103,13 +103,49 @@ Nenhum novo login é solicitado. Usado pelos clientes AULA que acessam via paine
 
 ## Planos
 
-| Plano | Preço mensal | Colaboradores incluídos | Extra |
+### SaaS (hospedagem na nuvem — sem instalação)
+
+| Plano | Preço mensal | Colaboradores incluídos | Extra/colab. |
 |---|---|---|---|
-| **Por Colaborador** | R$20 (1–8) · R$16 (9–16) · R$10 (17+) | Conforme contratado | — |
-| **Mini** | R$ 340 | até 30 | +R$10/colaborador |
-| **Pronto** | R$ 640 | até 80 | +R$10/colaborador |
-| **Máximo** | R$ 980 | até 150 | +R$6/colaborador |
+| **Por Colaborador** | R$20 (1–8 cobrados) · R$16 (9–16) · R$10 (17+) | conforme contratado | — |
+| **Mini** | R$ 340 | até 30 | +R$10 |
+| **Pronto** | R$ 640 | até 80 | +R$10 |
+| **Máximo** | R$ 980 | até 150 | +R$6 |
 | **Redes** | sob consulta | ilimitado (multi-unidade) | — |
+
+> Usuários do **AULA.app** têm 20% de desconto em qualquer plano SaaS.
+
+### Auto-hospedagem
+
+#### Add-on SUPERPONTO (+R$300/mês sobre qualquer plano)
+Disponível em qualquer plano. Instalamos banco de dados e interface nos servidores do cliente (cloud privada ou servidor local). O cliente mantém controle total da infraestrutura e dos dados.  
+**Recomendado para redes.** Contratação via contato direto.
+
+#### Plano CENTER — Exclusivo para RHs e Contabilidades
+
+| Campo | Valor |
+|---|---|
+| Preço base | R$ 980/mês (mesmo que o Máximo) |
+| Colaboradores incluídos | até 150 |
+| Extra/colaborador | +R$4,80 (20% de desconto vs. Máximo) |
+| Hospedagem | Auto-hospedado (SUPERPONTO incluso) |
+| Público-alvo | Departamentos de RH e Escritórios de Contabilidade |
+
+Inclui todos os recursos do Máximo + suporte e manutenção mensal. Permite gestão de múltiplas empresas clientes. Contratação via contato direto.
+
+#### Plano PRO — Para escolas com aula.app (auto-hospedado)
+
+| Campo | Valor |
+|---|---|
+| Preço base | R$ 784/mês (CENTER −20% desconto aula.app) |
+| Colaboradores incluídos | até 150 |
+| Extra/colaborador | +R$4,80 |
+| Hospedagem | Auto-hospedado (SUPERPONTO incluso) |
+| Público-alvo | Escolas que utilizam o aula.app |
+
+Segue o preço do plano CENTER com o desconto de 20% aplicado a todos os usuários do aula.app. Inclui integração nativa com o painel aula.app, suporte e manutenção mensal. Contratação via contato direto.
+
+---
 
 Todos os planos pagos incluem kiosque, restrição por IP, fotos, documentos e períodos configuráveis.
 

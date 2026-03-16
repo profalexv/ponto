@@ -124,7 +124,9 @@
           <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
             <button class="btn btn-primary" id="btn-change-plan" disabled>Confirmar mudança de plano</button>
             <button class="btn btn-ghost" id="btn-contact-redes">🏢 Solicitar plano Redes</button>
+            <button class="btn btn-ghost" id="btn-contact-superponto">☁️ Solicitar SUPERPONTO (+R$300/mês)</button>
           </div>
+          <p style="font-size:12px;color:var(--muted);margin-top:12px">Os planos <strong>CENTER</strong> e <strong>PRO (aula.app)</strong> são auto-hospedados e requerem contratação via <a href="mailto:contato@ponto.alexandre.pro.br" style="color:var(--brand)">contato@ponto.alexandre.pro.br</a>.</p>
         </div>
       </div>
 
@@ -196,6 +198,8 @@
     { id: 'mini',         label: 'Mini',            price: 'R$ 340',           period: '/mês',         desc: 'Até 30 colaboradores. +R$10/extra. Fotos de colaboradores + 2FA e segurança avançada.', max: 30, extra: 10 },
     { id: 'pronto',       label: 'Pronto',          price: 'R$ 640',           period: '/mês',         desc: 'Até 80 colaboradores. +R$10/extra. Fotos + Documentos legais automáticos + 2FA e segurança avançada.',  max: 80, extra: 10 },
     { id: 'maximo',       label: 'Máximo',          price: 'R$ 980',           period: '/mês',         desc: 'Até 150 colaboradores. +R$6/extra. Fotos + Documentos + Períodos + múltiplos kiosques + 2FA e segurança avançada.',  max: 150, extra: 6 },
+    { id: 'center',       label: 'CENTER',          price: 'R$ 980',           period: '/mês',         desc: 'Exclusivo para RHs e Contabilidades. Auto-hospedado (SUPERPONTO incluso). Até 150 colaboradores. +R$4,80/extra (20% desc. vs. Máximo). Banco de dados e interface nos servidores do cliente.', max: 150, extra: 4.80, especial: true },
+    { id: 'aula_pro',     label: 'PRO (aula.app)',  price: 'R$ 784',           period: '/mês',         desc: 'Para escolas que usam o aula.app. Auto-hospedado (SUPERPONTO incluso). Até 150 colaboradores. +R$4,80/extra. Desconto de 20% exclusivo para usuários aula.app.', max: 150, extra: 4.80, especial: true },
   ];
 
   /* ── Helpers ── */
@@ -305,17 +309,34 @@
         : 'Você está no período <strong>Trial</strong> — até 10 colaboradores por 35 dias.';
       prefix = `<p style="grid-column:1/-1;font-size:12px;color:var(--muted);text-align:center;margin-bottom:8px">${msg} Para ampliar, escolha um plano abaixo.</p>`;
     }
-    grid.innerHTML = prefix + PLANS.map(p => `
+    const standardPlans = PLANS.filter(p => !p.especial);
+    const especialPlans = PLANS.filter(p => p.especial);
+    const isEspecial = especialPlans.some(p => p.id === currentPlan);
+
+    grid.innerHTML = prefix + standardPlans.map(p => `
       <div class="plan-option${p.id === currentPlan ? ' selected' : ''}" data-plan="${p.id}" onclick="selectPlan('${p.id}')">
         <h4>${E(p.label)}</h4>
         <div class="plan-price">${E(p.price)}<small>${E(p.period)}</small></div>
         <div class="plan-desc">${E(p.desc)}</div>
       </div>`).join('');
+
+    if (especialPlans.length) {
+      const especialHeader = `<div style="grid-column:1/-1;margin:16px 0 8px;padding-top:16px;border-top:1px solid var(--border)"><strong style="font-size:13px">Planos especializados</strong> <span style="font-size:12px;color:var(--muted)">(auto-hospedados — requerem contratação via e-mail)</span></div>`;
+      grid.innerHTML += especialHeader + especialPlans.map(p => `
+        <div class="plan-option${p.id === currentPlan ? ' selected' : ''}" data-plan="${p.id}" style="opacity:${p.id === currentPlan ? 1 : 0.7};cursor:${p.id === currentPlan ? 'default' : 'not-allowed'}">
+          <h4>${E(p.label)}</h4>
+          <div class="plan-price">${E(p.price)}<small>${E(p.period)}</small></div>
+          <div class="plan-desc">${E(p.desc)}</div>
+        </div>`).join('');
+    }
+
     _selectedPlan = currentPlan;
     document.getElementById('btn-change-plan').disabled = true;
   }
 
   function selectPlan(id) {
+    const plan = PLANS.find(p => p.id === id);
+    if (plan?.especial) return; // planos especiais não são autosserviço
     _selectedPlan = id;
     document.querySelectorAll('.plan-option').forEach(el =>
       el.classList.toggle('selected', el.dataset.plan === id));
@@ -338,7 +359,11 @@
     window.location.href = 'mailto:contato@ponto.alexandre.pro.br?subject=Plano%20Redes%20-%20Solicita%C3%A7%C3%A3o';
   });
 
-  const PLAN_NAMES_HIST = { per_employee: 'Por Colaborador', mini: 'Mini', pronto: 'Pronto', maximo: 'Máximo', free: 'Free', trial: 'Trial', redes: 'Redes' };
+  document.getElementById('btn-contact-superponto').addEventListener('click', () => {
+    window.location.href = 'mailto:contato@ponto.alexandre.pro.br?subject=SUPERPONTO%20-%20Solicita%C3%A7%C3%A3o%20de%20Auto-hospedagem';
+  });
+
+  const PLAN_NAMES_HIST = { per_employee: 'Por Colaborador', mini: 'Mini', pronto: 'Pronto', maximo: 'Máximo', center: 'CENTER', aula_pro: 'PRO (aula.app)', free: 'Free', trial: 'Trial', redes: 'Redes' };
 
   async function loadHistory() {
     const tbody = document.getElementById('history-body');

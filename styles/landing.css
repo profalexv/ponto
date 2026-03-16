@@ -158,6 +158,27 @@ header nav { display: flex; align-items: center; justify-content: space-between;
 .pricing-discount p { font-size: 14px; color: #065f46; margin: 0; }
 .pricing-discount strong { font-weight: 700; }
 
+/* ── SUPERPONTO Add-on ───────────────────────────── */
+.pricing-addon { background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%); border: 2px solid var(--brand); border-radius: 14px; padding: 28px; display: flex; align-items: center; gap: 32px; flex-wrap: wrap; justify-content: space-between; margin-bottom: 32px; position: relative; }
+.pricing-addon-badge { position: absolute; top: -13px; left: 28px; background: var(--brand); color: #fff; border-radius: 20px; padding: 3px 14px; font-size: 12px; font-weight: 700; }
+.pricing-addon-info { flex: 1; min-width: 240px; }
+.pricing-addon-info h3 { font-size: 18px; font-weight: 800; margin-bottom: 6px; color: var(--text); }
+.pricing-addon-info p { font-size: 14px; color: var(--muted); max-width: 480px; margin-bottom: 10px; }
+.pricing-addon-price { text-align: center; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.pricing-addon-value { font-size: 28px; font-weight: 800; color: var(--text); line-height: 1; }
+.pricing-addon-value small { font-size: 14px; font-weight: 500; color: var(--muted); }
+.pricing-addon-desc { font-size: 12px; color: var(--muted); }
+
+/* ── Planos Especializados ───────────────────────── */
+.pricing-especial-header { text-align: center; margin: 44px 0 24px; }
+.pricing-especial-header h3 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+.pricing-especial-header p { font-size: 14px; color: var(--muted); }
+.pricing-especial-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 32px; }
+.pricing-card-especial { border-color: #7c3aed44; }
+.pricing-card-center { border-color: var(--brand) !important; }
+.pricing-badge-center { background: var(--brand); }
+.pricing-badge-pro { background: #7c3aed; }
+
 /* ── CTA ─────────────────────────────────────────── */
 .cta { padding: 80px 0; background: linear-gradient(135deg, #065f46 0%, #0f766e 60%, #0d9488 100%); color: #fff; }
 .cta-inner { text-align: center; }
@@ -189,14 +210,15 @@ footer { background: #0a0a0a; color: rgba(255,255,255,.6); padding: 48px 0 0; }
   .features-grid { grid-template-columns: 1fr 1fr; }
   .how-grid { grid-template-columns: 1fr 1fr; }
   .pricing-grid { grid-template-columns: 1fr 1fr; }
+  .pricing-especial-grid { grid-template-columns: 1fr 1fr; }
   .footer-inner { grid-template-columns: 1fr; }
   .footer-links { gap: 24px; }
 }
 @media (max-width: 600px) {
-  .features-grid, .how-grid, .pricing-grid { grid-template-columns: 1fr; }
+  .features-grid, .how-grid, .pricing-grid, .pricing-especial-grid { grid-template-columns: 1fr; }
   .nav-links { display: none; flex-direction: column; position: absolute; top: 56px; left: 0; right: 0; background: #065f46; padding: 12px 16px; gap: 4px; }
   .nav-links.open { display: flex; }
   .nav-toggle { display: block; }
   header nav { position: relative; }
-  .pricing-redes { flex-direction: column; }
+  .pricing-redes, .pricing-addon { flex-direction: column; }
 }
