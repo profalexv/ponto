@@ -126,6 +126,26 @@ body {
 .plan-option .plan-price small { font-size: 12px; font-weight: 400; color: var(--muted); }
 .plan-option .plan-desc  { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
+/* ── Tabs de navegação do painel plano ── */
+.plan-tabs-nav {
+  display: flex; align-items: center; gap: 4px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 24px; padding: 0 2px;
+  flex-wrap: wrap;
+}
+.plan-tab {
+  background: none; border: none; cursor: pointer;
+  padding: 10px 16px; font-size: 13px; font-weight: 600;
+  color: var(--muted); font-family: inherit;
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.plan-tab:hover  { color: var(--brand); }
+.plan-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+.plan-tab-panel  { animation: fadeIn .12s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
 /* ── Histórico ── */
 .table-wrap { overflow-x: auto; margin-top: 8px; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }

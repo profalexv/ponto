@@ -19,6 +19,8 @@ O código está implementado dentro do repositório `app`:
 | Migrations SQL | `../motor/supabase/migrations/20260314200000_ponto_standalone.sql` |
 | Migrations SQL | `../motor/supabase/migrations/20260315700000_ponto_advanced_features.sql` |
 | Migrations SQL | `../motor/supabase/migrations/20260315800000_ponto_logo.sql` |
+| Migrations SQL | `../motor/supabase/migrations/20260315900000_ponto_security.sql` |
+| Migrations SQL | `../motor/supabase/migrations/20260315910000_ponto_employee_otp.sql` |
 
 ## Schema de Banco (Supabase PostgreSQL)
 
@@ -37,8 +39,13 @@ ponto_organizations          ← tenant raiz (qualquer empresa)
   └── ponto_record_verifications ← vistos diários de supervisão
   └── ponto_monthly_periods  ← períodos com dia de corte configurável (novo)
   └── ponto_devices          ← dispositivos kiosque autorizados (novo)
-  └── ponto_org_settings     ← config completa (assinatura, IP, foto, docs, logo…)
+  └── ponto_org_settings     ← config completa (assinatura, IP, foto, docs, logo, segurança…)
   └── ponto_admins           ← gestores com login direto (sem SSO)
+  └── ponto_admin_2fa               ← config TOTP do gestor (secret cifrado + habilitado)
+  └── ponto_admin_otp_codes         ← códigos OTP por e-mail do gestor (TTL 10 min, uso único)
+  └── ponto_admin_trusted_devices   ← dispositivos confiáveis do gestor (skip-2FA configurável)
+  └── ponto_employee_authorized_devices ← dispositivos dos colaboradores (aceite eletrônico ou scan)
+  └── ponto_employee_otp_codes      ← códigos OTP do colaborador para assinar documentos/folha (TTL 10 min)
 
 Redes:
   ponto_organizations (parent_org_id = NULL)   ← organização-mãe
@@ -76,10 +83,17 @@ Nenhum novo login é solicitado. Usado pelos clientes AULA que acessam via paine
 ### Avançadas (v2.0 — março/2026)
 - **Kiosque multi-funcionário:** terminal compartilhado com PIN; autorização por dispositivo; `GET /api/ponto/kiosk/info` público com logo + nome da org
 - **Restrição por IP:** gravação do IP em cada marcação; whitelist configurável por organização; painel do gestor nunca bloqueado
-- **Foto do colaborador:** URL externa (Google Drive, CDN) por colaborador; captura opcional no batimento
+- **Foto do colaborador:** URL externa (Google Drive, CDN) por colaborador; captura opcional no batimento; amostragem automática (25%) no `openPunchModal` quando `photo_sample_on_punch = true`
 - **Documentos legais:** geração automática de contratos, termos LGPD e outros; arquivamento de URLs com metadados permanentes
 - **Períodos mensais configuráveis:** dia de corte 1–28; abertura/fechamento manual ou automático; folha arquivada no fechamento
 - **Identidade visual:** `logo_url` + `org_display_name` + `logo_show_in_docs` em `ponto_org_settings`; logo no painel, documentos e kiosque
+
+### Segurança Avançada (v2.1 — março/2026)
+- **2FA do gestor:** autenticação de dois fatores por código OTP via e-mail (SMTP) e/ou TOTP (Google Authenticator, Authy etc.), configurável por organização
+- **Timeout por inatividade:** sessão do painel expira após 15, 30 ou 60 minutos sem interação; reautenticação obrigatória (com 2FA se ativo)
+- **Dispositivo confiável do gestor:** opção "não solicitar 2FA neste dispositivo" com validade de 1 dia, 2 dias, 1 semana, 15 dias, 1 mês ou nunca expira — armazenado em `ponto_admin_trusted_devices`
+- **Autorização de dispositivos do colaborador:** cada dispositivo de batimento é cadastrado e autorizado individualmente, com aceite eletrônico ou scan PDF anexado — nunca excluível (apenas bloqueável), registrado em `ponto_employee_authorized_devices`
+- **2FA do colaborador para documentos/folha:** verificação de identidade obrigatória antes de gerar documentos ou aceitar folha mensal — via PIN ou código OTP por e-mail; backend emite `emp_sign_token` JWT de 5 min
 
 ## Conformidade legal
 

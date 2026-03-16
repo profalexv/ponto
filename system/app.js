@@ -21,6 +21,10 @@ let _token          = null;
 let _tab            = 'hoje';
 let _logoUrl        = null;   // URL da logo da organização
 let _displayOrgName = null;   // Nome de exibição
+let _inactivityTimer = null;  // setTimeout de inatividade
+let _reauthPending  = false;  // flag de reauth ativa
+let _planUpgradeSuggested = false; // notificação de upgrade de plano ativa
+let _orgSettings    = null;   // Cache das configurações da organização
 
 /* ─── Utilitários ───────────────────────────────────────────── */
 const E = (s) =>
@@ -61,10 +65,191 @@ function clearSession() {
 }
 
 function sessionExpired() {
+  stopInactivityTimer();
   clearSession();
   document.getElementById('app').classList.add('hidden');
   showLoginForm();
   showToast('Sessão encerrada. Faça login novamente.', 'warning');
+}
+
+/* ─── Device fingerprint (persiste no localStorage) ────────── */
+function getDeviceFingerprint() {
+  let fp = localStorage.getItem('ponto_device_fp');
+  if (!fp) {
+    fp = crypto.randomUUID ? crypto.randomUUID() : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
+    localStorage.setItem('ponto_device_fp', fp);
+  }
+  return fp;
+}
+
+/* ─── Inatividade ───────────────────────────────────────────── */
+function startInactivityTimer(ms) {
+  stopInactivityTimer();
+  if (!ms || ms <= 0) return;
+  const reset = () => {
+    clearTimeout(_inactivityTimer);
+    _inactivityTimer = setTimeout(() => {
+      if (!_reauthPending) showReauthOverlay();
+    }, ms);
+  };
+  ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(ev =>
+    document.addEventListener(ev, reset, { passive: true })
+  );
+  reset();
+}
+
+function stopInactivityTimer() {
+  clearTimeout(_inactivityTimer);
+  _inactivityTimer = null;
+}
+
+/* ─── Overlay de re-autenticação por inatividade ────────────── */
+function showReauthOverlay() {
+  if (_reauthPending) return;
+  _reauthPending = true;
+  stopInactivityTimer();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'reauth-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.85);display:flex;align-items:center;justify-content:center;z-index:9999';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:32px;width:360px;max-width:90vw;box-shadow:0 25px 60px rgba(0,0,0,0.4)">
+      <div style="font-size:32px;text-align:center;margin-bottom:8px">🔐</div>
+      <h2 style="text-align:center;color:#111827;font-size:18px;margin-bottom:4px">Sessão pausada por inatividade</h2>
+      <p style="color:#6b7280;font-size:13px;text-align:center;margin-bottom:20px">Confirme sua senha para continuar.</p>
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" id="reauth-email" value="${E(localStorage.getItem('ponto_admin_email') || '')}" autocomplete="email" style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px">
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="reauth-password" autocomplete="current-password" style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px" autofocus>
+      </div>
+      <div id="reauth-2fa-section" style="display:none">
+        <div class="form-group">
+          <label id="reauth-2fa-label">Código 2FA</label>
+          <input type="text" id="reauth-2fa-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code"
+            style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;letter-spacing:4px;text-align:center;font-size:18px">
+        </div>
+        <button id="reauth-send-otp-btn" style="display:none;background:none;border:none;color:#2563eb;font-size:12px;cursor:pointer;margin-bottom:8px">📧 Reenviar código por e-mail</button>
+      </div>
+      <div id="reauth-status" style="color:#dc2626;font-size:12px;min-height:16px;margin-bottom:8px"></div>
+      <button id="reauth-submit-btn" style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:600;cursor:pointer">Continuar</button>
+      <button id="reauth-logout-btn" style="width:100%;background:none;border:none;color:#6b7280;font-size:12px;cursor:pointer;margin-top:8px">Sair da conta</button>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  let _reauthTempToken = null;
+  let _reauthMethods   = [];
+
+  const statusEl  = overlay.querySelector('#reauth-status');
+  const submitBtn = overlay.querySelector('#reauth-submit-btn');
+
+  overlay.querySelector('#reauth-logout-btn').addEventListener('click', () => {
+    overlay.remove();
+    _reauthPending = false;
+    sessionExpired();
+  });
+
+  overlay.querySelector('#reauth-send-otp-btn')?.addEventListener('click', async () => {
+    if (!_reauthTempToken) return;
+    try {
+      await fetch(`${MOTOR_URL}/api/ponto/auth/2fa/send-otp`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tempToken: _reauthTempToken }),
+      });
+      showToast('Código reenviado por e-mail.', 'info');
+    } catch { showToast('Erro ao reenviar código.', 'error'); }
+  });
+
+  submitBtn.addEventListener('click', async () => {
+    const email    = overlay.querySelector('#reauth-email').value.trim();
+    const password = overlay.querySelector('#reauth-password').value;
+    submitBtn.disabled = true;
+    statusEl.textContent = '';
+
+    try {
+      if (_reauthTempToken) {
+        // Etapa 2: verificar 2FA
+        const code   = overlay.querySelector('#reauth-2fa-code').value.trim();
+        const method = _reauthMethods.includes('totp') ? 'totp' : 'email';
+        if (!code) { statusEl.textContent = 'Informe o código.'; submitBtn.disabled = false; return; }
+        const r = await fetch(`${MOTOR_URL}/api/ponto/auth/2fa/verify`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tempToken: _reauthTempToken, code, method, deviceFingerprint: getDeviceFingerprint() }),
+        });
+        const body = await r.json();
+        if (!r.ok) { statusEl.textContent = body.error || 'Código incorreto.'; submitBtn.disabled = false; return; }
+        _token = body.token;
+        _orgId = body.orgId;
+        localStorage.setItem('ponto_token',    body.token);
+        localStorage.setItem('ponto_org_id',   body.orgId);
+        localStorage.setItem('ponto_login_at', Date.now().toString());
+      } else {
+        // Etapa 1: re-autenticar com senha
+        const r = await fetch(`${MOTOR_URL}/api/ponto/auth/login`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, deviceFingerprint: getDeviceFingerprint() }),
+        });
+        const body = await r.json();
+        if (!r.ok) { statusEl.textContent = body.error || 'Credenciais inválidas.'; submitBtn.disabled = false; return; }
+
+        if (body.requires2FA) {
+          _reauthTempToken = body.tempToken;
+          _reauthMethods   = body.methods || [];
+          const sec = overlay.querySelector('#reauth-2fa-section');
+          if (sec) sec.style.display = '';
+          const lbl = overlay.querySelector('#reauth-2fa-label');
+          if (lbl) lbl.textContent = _reauthMethods.includes('totp') ? 'Código TOTP (app autenticador)' : 'Código enviado por e-mail';
+          const sendBtn = overlay.querySelector('#reauth-send-otp-btn');
+          if (sendBtn) sendBtn.style.display = _reauthMethods.includes('email') ? '' : 'none';
+          if (_reauthMethods.includes('email')) {
+            await fetch(`${MOTOR_URL}/api/ponto/auth/2fa/send-otp`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ tempToken: _reauthTempToken }),
+            });
+          }
+          statusEl.textContent = '';
+          submitBtn.disabled = false;
+          overlay.querySelector('#reauth-password').style.opacity = '0.5';
+          return;
+        }
+
+        // Sem 2FA — token direto
+        if (body.multiOrg) {
+          overlay.remove();
+          _reauthPending = false;
+          showOrgSelectScreen(body.orgs, body.selectionToken);
+          return;
+        }
+        _token = body.token;
+        _orgId = body.orgId;
+        localStorage.setItem('ponto_token',    body.token);
+        localStorage.setItem('ponto_org_id',   body.orgId);
+        localStorage.setItem('ponto_login_at', Date.now().toString());
+      }
+
+      overlay.remove();
+      _reauthPending = false;
+      showToast('Sessão reativada.', 'success');
+      // Reaquece o timer de inatividade
+      const settings = await apiGet('/settings').catch(() => ({}));
+      if ((settings?.admin_session_timeout_min ?? 0) > 0) {
+        startInactivityTimer(settings.admin_session_timeout_min * 60 * 1000);
+      }
+    } catch (err) {
+      statusEl.textContent = err.message || 'Erro inesperado.';
+      submitBtn.disabled = false;
+    }
+  });
+
+  overlay.querySelector('#reauth-password').addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') submitBtn.click();
+  });
+  overlay.querySelector('#reauth-2fa-code')?.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') submitBtn.click();
+  });
 }
 
 /* ─── API helper ─────────────────────────────────────────────── */
@@ -285,6 +470,10 @@ async function renderFuncionarios(container) {
       const emp = emps.find(e => e.id === parseInt(btn.dataset.id, 10));
       btn.addEventListener('click', () => openEmployeeDocsModal(emp));
     });
+    container.querySelectorAll('.emp-devices-btn').forEach(btn => {
+      const emp = emps.find(e => e.id === parseInt(btn.dataset.id, 10));
+      btn.addEventListener('click', () => openEmployeeDevicesModal(emp));
+    });
     container.querySelectorAll('.emp-photo-btn').forEach(btn => {
       const emp = emps.find(e => e.id === parseInt(btn.dataset.id, 10));
       btn.addEventListener('click', () => openEmployeePhotoModal(emp));
@@ -309,10 +498,11 @@ function empCard(emp) {
       ${emp.hire_date ? `<div style="font-size:11px;color:#9ca3af">Admissão: ${new Date(emp.hire_date + 'T00:00:00').toLocaleDateString('pt-BR')}</div>` : ''}
       <div class="emp-card-tags">${badge}${gpsBadge}${imgBadge}${hwBadge}${digBadge}</div>
       <div class="emp-card-actions">
-        <button class="btn btn-ghost btn-sm emp-edit-btn"  data-id="${emp.id}">✏️ Editar</button>
-        <button class="btn btn-ghost btn-sm emp-photo-btn" data-id="${emp.id}">📷 Foto</button>
-        <button class="btn btn-ghost btn-sm emp-docs-btn"  data-id="${emp.id}">📁 Docs</button>
-        <button class="btn btn-ghost btn-sm emp-del-btn"   data-id="${emp.id}" style="color:#dc2626">🗑 Remover</button>
+        <button class="btn btn-ghost btn-sm emp-edit-btn"    data-id="${emp.id}">✏️ Editar</button>
+        <button class="btn btn-ghost btn-sm emp-photo-btn"   data-id="${emp.id}">📷 Foto</button>
+        <button class="btn btn-ghost btn-sm emp-docs-btn"    data-id="${emp.id}">📁 Docs</button>
+        <button class="btn btn-ghost btn-sm emp-devices-btn" data-id="${emp.id}">🛡️ Disp.</button>
+        <button class="btn btn-ghost btn-sm emp-del-btn"     data-id="${emp.id}" style="color:#dc2626">🗑 Remover</button>
       </div>
     </div>`;
 }
@@ -328,6 +518,148 @@ async function deleteEmployeeById(id, container) {
     showToast('Funcionário removido.', 'success');
     await renderFuncionarios(container);
   } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function openEmployeeDevicesModal(emp) {
+  let devices = [];
+  try {
+    const data = await apiGet(`/employee-devices?employeeId=${emp.id}`);
+    devices = Array.isArray(data) ? data : [];
+  } catch (_) {}
+
+  function renderDeviceList() {
+    if (!devices.length) return '<p style="color:#6b7280;font-size:.9rem;padding:4px 0">Nenhum dispositivo autorizado.</p>';
+    return devices.map(d => `
+      <div class="device-row" style="display:flex;align-items:center;justify-content:space-between;padding:8px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:6px">
+        <div>
+          <strong style="font-size:.9rem">${E(d.device_name || 'Dispositivo sem nome')}</strong>
+          <div style="font-size:.75rem;color:#6b7280">
+            ${d.acceptance_type === 'scan' ? '📄 Digitalizado' : '✍️ Eletrônico'}
+            ${d.created_at ? ' &nbsp;' + new Date(d.created_at).toLocaleDateString('pt-BR') : ''}
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:.75rem;padding:2px 8px;border-radius:12px;
+            background:${d.status === 'active' ? '#dcfce7' : '#fee2e2'};
+            color:${d.status === 'active' ? '#166534' : '#991b1b'}">
+            ${d.status === 'active' ? 'Ativo' : 'Bloqueado'}
+          </span>
+          <button class="btn btn-ghost btn-sm dev-toggle-btn"
+                  data-id="${d.id}" data-action="${d.status === 'active' ? 'block' : 'unblock'}"
+                  title="${d.status === 'active' ? 'Bloquear dispositivo' : 'Liberar dispositivo'}">
+            ${d.status === 'active' ? '🔒' : '🔓'}
+          </button>
+        </div>
+      </div>`).join('');
+  }
+
+  openModal({
+    title: `🛡️ Dispositivos — ${E(emp.name)}`,
+    bodyHtml: `
+      <div id="dev-list">${renderDeviceList()}</div>
+      <details style="margin-top:16px">
+        <summary style="cursor:pointer;font-weight:600;color:var(--primary,#0066cc);user-select:none;padding:4px 0">
+          + Adicionar dispositivo
+        </summary>
+        <div style="padding:12px 0 0;display:flex;flex-direction:column;gap:8px">
+          <div class="form-group">
+            <label>Nome do dispositivo</label>
+            <input type="text" id="dev-name" placeholder="Celular, Tablet Recepção...">
+          </div>
+          <div class="form-group">
+            <label>ID do dispositivo (fingerprint)</label>
+            <input type="text" id="dev-fp" placeholder="Código fornecido pelo colaborador">
+            <small style="color:#6b7280">O colaborador acessa o sistema no dispositivo e copia o ID exibido.</small>
+          </div>
+          <div class="form-group">
+            <label>Tipo de aceite</label>
+            <select id="dev-type">
+              <option value="electronic">✍️ Eletrônico (tela)</option>
+              <option value="scan">📄 Assinatura digitalizada</option>
+            </select>
+          </div>
+          <div class="form-group" id="dev-scan-url-group" style="display:none">
+            <label>URL do documento digitalizado</label>
+            <input type="url" id="dev-scan-url" placeholder="https://...">
+          </div>
+          <div class="form-group">
+            <label>Autorizado por</label>
+            <input type="text" id="dev-signed-by" placeholder="Nome do responsável">
+          </div>
+          <button class="btn btn-primary" id="dev-add-btn" style="width:100%">Autorizar dispositivo</button>
+        </div>
+      </details>`,
+    confirmLabel: 'Fechar',
+    confirmClass: 'btn-ghost',
+    onConfirm: async (_ov, close) => close(),
+  });
+
+  function refresh() {
+    document.getElementById('dev-list').innerHTML = renderDeviceList();
+    bindToggleBtns();
+  }
+
+  function bindToggleBtns() {
+    document.querySelectorAll('.dev-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id     = parseInt(btn.dataset.id, 10);
+        const action = btn.dataset.action;
+        btn.disabled = true;
+        try {
+          await apiPost(`/employee-devices/${id}/action`, { action });
+          const dev = devices.find(d => d.id === id);
+          if (dev) dev.status = action === 'block' ? 'blocked' : 'active';
+          refresh();
+          showToast(action === 'block' ? 'Dispositivo bloqueado.' : 'Dispositivo liberado.', 'success');
+        } catch (e) {
+          showToast(e.message, 'error');
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+
+  function bindAddForm() {
+    document.getElementById('dev-type').addEventListener('change', function () {
+      document.getElementById('dev-scan-url-group').style.display = this.value === 'scan' ? '' : 'none';
+    });
+
+    document.getElementById('dev-add-btn').addEventListener('click', async () => {
+      const name     = document.getElementById('dev-name').value.trim();
+      const fp       = document.getElementById('dev-fp').value.trim();
+      const type     = document.getElementById('dev-type').value;
+      const scanUrl  = document.getElementById('dev-scan-url').value.trim();
+      const signedBy = document.getElementById('dev-signed-by').value.trim();
+      if (!name || !fp) { showToast('Informe nome e ID do dispositivo.', 'warning'); return; }
+
+      const addBtn = document.getElementById('dev-add-btn');
+      addBtn.disabled = true;
+      try {
+        const d = await apiPost('/employee-devices', {
+          employee_id:        emp.id,
+          device_fingerprint: fp,
+          device_name:        name,
+          acceptance_type:    type,
+          scan_url:           scanUrl  || null,
+          signed_by:          signedBy || null,
+        });
+        devices.push(d);
+        refresh();
+        document.getElementById('dev-name').value      = '';
+        document.getElementById('dev-fp').value        = '';
+        document.getElementById('dev-signed-by').value = '';
+        showToast('Dispositivo autorizado.', 'success');
+      } catch (e) {
+        showToast(e.message, 'error');
+      } finally {
+        const b = document.getElementById('dev-add-btn');
+        if (b) b.disabled = false;
+      }
+    });
+  }
+
+  bindToggleBtns();
+  bindAddForm();
 }
 
 async function openEmployeeModal(existing, container) {
@@ -695,9 +1027,19 @@ async function openDocGeneratorModal(emp) {
       const docType = overlay.querySelector('#gen-doc-type').value;
       const period  = overlay.querySelector('#gen-period').value;
       try {
+        // Se 2FA de funcionário estiver ativo para documentos, verifica identidade primeiro
+        let empSignToken = null;
+        if (_orgSettings?.employee_2fa_for_docs) {
+          try {
+            empSignToken = await requireEmployeeAuth(emp.id, emp.name);
+          } catch (_) { return; }
+        }
+
+        const body = { doc_type: docType, reference_period: period || null };
+        if (empSignToken) body.emp_sign_token = empSignToken;
         const result = await api(`/employees/${emp.id}/documents/generate`, {
           method: 'POST',
-          body: JSON.stringify({ doc_type: docType, reference_period: period || null }),
+          body: JSON.stringify(body),
         });
         const preview = overlay.querySelector('#gen-preview');
         const textEl  = overlay.querySelector('#gen-text');
@@ -1019,15 +1361,25 @@ async function openDeviceEditModal(dev, container) {
 async function renderConfiguracoes(container) {
   container.innerHTML = '<div class="ponto-loading">Carregando...</div>';
   try {
-    const settings = await apiGet('/settings');
-    renderConfigForm(container, settings);
+    const [settings, status] = await Promise.all([
+      apiGet('/settings'),
+      apiGet('/status').catch(() => null),
+    ]);
+    renderConfigForm(container, settings, status);
   } catch (e) {
     container.innerHTML = `<div class="ponto-error">Erro: ${E(e.message)}</div>`;
   }
 }
 
-function renderConfigForm(container, s) {
+function renderConfigForm(container, s, st = null) {
   const ipList = (s?.ip_whitelist || []).join(', ');
+
+  // Resumo do plano para exibir na seção
+  const PLAN_NAMES = { per_employee: 'Por Funcionário', mini: 'PONTO MINI (até 30)', pronto: 'PONTO PRONTO (até 80)', maximo: 'PONTO MÁXIMO (ilimitado)' };
+  const planLabel = st?.active ? (PLAN_NAMES[st.plan] || st.plan) : (st ? 'Inativo' : '—');
+  const planUsage = st?.active && st.maxEmployees > 0
+    ? ` · ${st.employeeCount}/${st.maxEmployees} funcionários`
+    : (st?.active && st.employeeCount > 0 ? ` · ${st.employeeCount} funcionários` : '');
 
   container.innerHTML = `
     <div style="max-width:720px">
@@ -1197,6 +1549,124 @@ function renderConfigForm(container, s) {
       <div style="margin-top:20px">
         <button class="btn btn-primary" id="cfg-save-btn">💾 Salvar Configurações</button>
       </div>
+
+      <!-- Segurança -->
+      <div class="config-section" style="margin-top:20px">
+        <h3 class="config-section-title">🔐 Segurança do Gestor</h3>
+
+        <div style="display:grid;grid-template-columns:1fr;gap:10px">
+
+          <label class="config-toggle">
+            <input type="checkbox" id="cfg-2fa-enabled" ${s?.admin_2fa_enabled ? 'checked' : ''}>
+            <span>Exigir autenticação de dois fatores (2FA) para login do gestor</span>
+          </label>
+
+          <div id="cfg-2fa-opts" style="${s?.admin_2fa_enabled ? '' : 'display:none'}">
+            <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin:8px 0;font-size:12px;color:#1e40af">
+              ℹ️ Escolha um ou mais métodos de 2FA. O gestor precisará verificar um deles a cada login (a menos que o dispositivo seja confiável).
+            </div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                <input type="checkbox" id="cfg-2fa-totp" ${(s?.admin_2fa_methods || []).includes('totp') ? 'checked' : ''}>
+                <span>📱 TOTP (Google Authenticator / Authy)</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                <input type="checkbox" id="cfg-2fa-email" ${(s?.admin_2fa_methods || []).includes('email') ? 'checked' : ''}>
+                <span>📧 Código por E-mail</span>
+              </label>
+            </div>
+            <div id="cfg-2fa-totp-setup-row" style="${(s?.admin_2fa_methods || []).includes('totp') ? '' : 'display:none'}">
+              <button class="btn btn-ghost btn-sm" id="cfg-2fa-setup-totp-btn" style="margin-bottom:8px">⚙️ Configurar TOTP no app autenticador</button>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+            <div class="form-group">
+              <label>Desconectar por inatividade</label>
+              <select id="cfg-session-timeout">
+                <option value="0"  ${(s?.admin_session_timeout_min ?? 0) === 0  ? 'selected' : ''}>Desativado</option>
+                <option value="15" ${(s?.admin_session_timeout_min ?? 0) === 15 ? 'selected' : ''}>15 minutos</option>
+                <option value="30" ${(s?.admin_session_timeout_min ?? 0) === 30 ? 'selected' : ''}>30 minutos</option>
+                <option value="60" ${(s?.admin_session_timeout_min ?? 0) === 60 ? 'selected' : ''}>60 minutos</option>
+              </select>
+              <small style="color:#9ca3af">Solicita re-autenticação após inatividade</small>
+            </div>
+            <div class="form-group" id="cfg-trusted-device-wrap">
+              <label>Confiança de dispositivo</label>
+              <select id="cfg-trusted-days">
+                <option value="-1" ${(s?.admin_trusted_device_days ?? 0) === -1 ? 'selected' : ''}>Sempre perguntar 2FA</option>
+                <option value="0"  ${(s?.admin_trusted_device_days ?? 0) === 0  ? 'selected' : ''}>Nunca salvar (padrão)</option>
+                <option value="1"  ${(s?.admin_trusted_device_days ?? 0) === 1  ? 'selected' : ''}>1 dia</option>
+                <option value="2"  ${(s?.admin_trusted_device_days ?? 0) === 2  ? 'selected' : ''}>2 dias</option>
+                <option value="7"  ${(s?.admin_trusted_device_days ?? 0) === 7  ? 'selected' : ''}>1 semana</option>
+                <option value="15" ${(s?.admin_trusted_device_days ?? 0) === 15 ? 'selected' : ''}>15 dias</option>
+                <option value="30" ${(s?.admin_trusted_device_days ?? 0) === 30 ? 'selected' : ''}>1 mês</option>
+                <option value="9999" ${(s?.admin_trusted_device_days ?? 0) === 9999 ? 'selected' : ''}>Nunca expirar</option>
+              </select>
+              <small style="color:#9ca3af">Validade máxima do "não perguntar neste dispositivo"</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Segurança do Funcionário -->
+      <div class="config-section">
+        <h3 class="config-section-title">🔐 Segurança do Colaborador</h3>
+
+        <div style="display:grid;grid-template-columns:1fr;gap:10px">
+          <label class="config-toggle">
+            <input type="checkbox" id="cfg-emp-dev-auth" ${s?.employee_device_auth_req ? 'checked' : ''}>
+            <span>Exigir autorização do dispositivo para o colaborador bater ponto</span>
+          </label>
+          <div id="cfg-emp-dev-info" style="${s?.employee_device_auth_req ? '' : 'display:none'}">
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;font-size:12px;color:#14532d">
+              ✅ Apenas dispositivos com aceite eletrônico ou scan físico autorizado poderão registrar ponto.<br>
+              Gerencie os dispositivos na aba 👤 Funcionários → menu do colaborador.
+            </div>
+          </div>
+
+          <label class="config-toggle">
+            <input type="checkbox" id="cfg-emp-2fa-docs" ${s?.employee_2fa_for_docs ? 'checked' : ''}>
+            <span>Exigir verificação de identidade no aceite eletrônico de documentos</span>
+          </label>
+
+          <label class="config-toggle">
+            <input type="checkbox" id="cfg-emp-2fa-sheets" ${s?.employee_2fa_for_sheets ? 'checked' : ''}>
+            <span>Exigir verificação de identidade na assinatura da folha mensal</span>
+          </label>
+
+          <div id="cfg-emp-2fa-method-wrap" style="${(s?.employee_2fa_for_docs || s?.employee_2fa_for_sheets) ? '' : 'display:none'}">
+            <div class="form-group">
+              <label>Método de verificação do colaborador</label>
+              <select id="cfg-emp-2fa-method">
+                <option value="pin"   ${(s?.employee_2fa_method || 'pin') === 'pin'   ? 'selected' : ''}>🔢 PIN cadastrado</option>
+                <option value="email" ${(s?.employee_2fa_method || 'pin') === 'email' ? 'selected' : ''}>📧 Código por E-mail</option>
+                <option value="totp"  ${(s?.employee_2fa_method || 'pin') === 'totp'  ? 'selected' : ''}>📱 TOTP (autenticador)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <button class="btn btn-primary" id="cfg-save-sec-btn">💾 Salvar Configurações de Segurança</button>
+      </div>
+
+      <!-- Plano de Assinatura -->
+      <div class="config-section" style="margin-top:24px;border-top:1px solid #e5e7eb;padding-top:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div>
+            <h3 class="config-section-title" style="margin:0 0 4px">💳 Plano de Assinatura</h3>
+            <p style="color:#6b7280;font-size:.85rem;margin:0">
+              ${E(planLabel)}${E(planUsage)}
+            </p>
+          </div>
+          <button id="cfg-plano-btn" class="btn btn-ghost btn-sm" style="white-space:nowrap"
+                  onclick="window.open('/plano/', '_blank', 'noopener')">
+            💳 Gerenciar Plano ↗
+          </button>
+        </div>
+      </div>
     </div>`;
 
   // Toggle visibilidade dos sub-painéis
@@ -1297,6 +1767,140 @@ function renderConfigForm(container, s) {
       if (btn) { btn.disabled = false; btn.textContent = '💾 Salvar Configurações'; }
     }
   });
+
+  // ── Toggles da seção Segurança ──────────────────────────────────
+  document.getElementById('cfg-2fa-enabled')?.addEventListener('change', ev => {
+    const opts = document.getElementById('cfg-2fa-opts');
+    if (opts) opts.style.display = ev.target.checked ? '' : 'none';
+  });
+  document.getElementById('cfg-2fa-totp')?.addEventListener('change', ev => {
+    const row = document.getElementById('cfg-2fa-totp-setup-row');
+    if (row) row.style.display = ev.target.checked ? '' : 'none';
+  });
+  document.getElementById('cfg-emp-dev-auth')?.addEventListener('change', ev => {
+    const info = document.getElementById('cfg-emp-dev-info');
+    if (info) info.style.display = ev.target.checked ? '' : 'none';
+  });
+  const updateEmp2faMethodWrap = () => {
+    const docs   = document.getElementById('cfg-emp-2fa-docs')?.checked;
+    const sheets = document.getElementById('cfg-emp-2fa-sheets')?.checked;
+    const wrap   = document.getElementById('cfg-emp-2fa-method-wrap');
+    if (wrap) wrap.style.display = (docs || sheets) ? '' : 'none';
+  };
+  document.getElementById('cfg-emp-2fa-docs')?.addEventListener('change', updateEmp2faMethodWrap);
+  document.getElementById('cfg-emp-2fa-sheets')?.addEventListener('change', updateEmp2faMethodWrap);
+
+  // Botão configurar TOTP
+  document.getElementById('cfg-2fa-setup-totp-btn')?.addEventListener('click', openTotpSetupModal);
+
+  // Salvar segurança
+  document.getElementById('cfg-save-sec-btn')?.addEventListener('click', async () => {
+    const enabled  = document.getElementById('cfg-2fa-enabled')?.checked ?? false;
+    const useTotp  = document.getElementById('cfg-2fa-totp')?.checked ?? false;
+    const useEmail = document.getElementById('cfg-2fa-email')?.checked ?? false;
+    const methods  = [useTotp && 'totp', useEmail && 'email'].filter(Boolean);
+
+    if (enabled && methods.length === 0) {
+      showToast('Selecione pelo menos um método de 2FA quando ele está habilitado.', 'warning');
+      return;
+    }
+
+    const secPayload = {
+      admin_2fa_enabled:         enabled,
+      admin_2fa_methods:         methods,
+      admin_session_timeout_min: parseInt(document.getElementById('cfg-session-timeout')?.value || '0', 10),
+      admin_trusted_device_days: parseInt(document.getElementById('cfg-trusted-days')?.value || '0', 10),
+      employee_device_auth_req:  document.getElementById('cfg-emp-dev-auth')?.checked ?? false,
+      employee_2fa_for_docs:     document.getElementById('cfg-emp-2fa-docs')?.checked ?? false,
+      employee_2fa_for_sheets:   document.getElementById('cfg-emp-2fa-sheets')?.checked ?? false,
+      employee_2fa_method:       document.getElementById('cfg-emp-2fa-method')?.value || 'pin',
+    };
+
+    try {
+      const btn = document.getElementById('cfg-save-sec-btn');
+      btn.disabled = true;
+      btn.textContent = 'Salvando...';
+      await apiPut('/settings', { ...secPayload, org_id: _orgId });
+
+      // Aplicar timeout de inatividade imediatamente
+      const tMin = secPayload.admin_session_timeout_min;
+      if (tMin > 0) {
+        startInactivityTimer(tMin * 60 * 1000);
+      } else {
+        stopInactivityTimer();
+      }
+
+      showToast('Configurações de segurança salvas.', 'success');
+    } catch (e) {
+      showToast(e.message, 'error');
+    } finally {
+      const btn = document.getElementById('cfg-save-sec-btn');
+      if (btn) { btn.disabled = false; btn.textContent = '💾 Salvar Configurações de Segurança'; }
+    }
+  });
+
+  // Atualiza estilo do botão de plano conforme estado atual
+  _refreshPlanBtn();
+}
+
+/* ─── Modal: Configurar TOTP ─────────────────────────────────── */
+async function openTotpSetupModal() {
+  let qrDone = false;
+  openModal({
+    title: '📱 Configurar TOTP — Google Authenticator / Authy',
+    bodyHtml: `
+      <p style="color:#374151;font-size:13px;margin-bottom:12px">
+        Escaneie o QR code abaixo com o app <strong>Google Authenticator</strong>, <strong>Authy</strong> ou qualquer autenticador TOTP.
+        Em seguida, insira o código de 6 dígitos gerado para confirmar a configuração.
+      </p>
+      <div id="totp-qr-wrap" style="text-align:center;padding:20px">
+        <div class="ponto-loading">Gerando QR code...</div>
+      </div>
+      <div id="totp-secret-wrap" style="display:none;margin-bottom:12px">
+        <p style="font-size:12px;color:#6b7280;margin-bottom:4px">Ou insira a chave manualmente no app:</p>
+        <code id="totp-secret-display" style="font-size:13px;font-family:monospace;background:#f3f4f6;padding:6px 10px;border-radius:6px;display:inline-block;letter-spacing:2px;cursor:pointer" title="Clicar para copiar"></code>
+        <button class="btn btn-ghost btn-sm" id="totp-copy-secret" style="margin-left:8px;font-size:11px">📋 Copiar</button>
+      </div>
+      <div class="form-group">
+        <label>Código de verificação (6 dígitos) *</label>
+        <input type="text" id="totp-verify-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code"
+          placeholder="000000" style="letter-spacing:4px;text-align:center;font-size:20px">
+      </div>
+      <p style="font-size:12px;color:#6b7280">⚠️ Guarde a chave secreta em local seguro — ela não pode ser recuperada.</p>`,
+    confirmLabel: '✅ Confirmar e Ativar TOTP',
+    onConfirm: async (overlay, close) => {
+      if (!qrDone) { showToast('Aguarde o QR code carregar.', 'warning'); return; }
+      const code = overlay.querySelector('#totp-verify-code')?.value.trim();
+      if (!code || code.length < 6) { showToast('Insira o código de 6 dígitos.', 'warning'); return; }
+      try {
+        await apiPost('/auth/confirm-totp', { code });
+        showToast('TOTP ativado! Seu app autenticador está configurado.', 'success');
+        close();
+      } catch (e) { showToast(e.message, 'error'); }
+    },
+  });
+
+  // Carrega QR após modal abrir
+  setTimeout(async () => {
+    try {
+      const result = await apiPost('/auth/setup-totp', {});
+      qrDone = true;
+      const wrap = document.getElementById('totp-qr-wrap');
+      const secWrap = document.getElementById('totp-secret-wrap');
+      const secDisp = document.getElementById('totp-secret-display');
+      if (wrap) {
+        wrap.innerHTML = `<img src="${E(result.qrUrl)}" width="200" height="200" alt="QR code TOTP" style="border-radius:8px;border:1px solid #e5e7eb">`;
+      }
+      if (secDisp) secDisp.textContent = result.secret || '';
+      if (secWrap) secWrap.style.display = '';
+      document.getElementById('totp-copy-secret')?.addEventListener('click', () => {
+        navigator.clipboard.writeText(result.secret || '').then(() => showToast('Chave copiada!', 'success'));
+      });
+    } catch (err) {
+      const wrap = document.getElementById('totp-qr-wrap');
+      if (wrap) wrap.innerHTML = `<p style="color:#dc2626;font-size:13px">Erro ao gerar QR: ${E(err.message)}</p>`;
+    }
+  }, 100);
 }
 
 /* ─── Aba: Histórico ─────────────────────────────────────────── */
@@ -1689,6 +2293,94 @@ async function loadFolha(periodMonth) {
   }
 }
 
+/**
+ * requireEmployeeAuth(empId, empName)
+ * Se employee_2fa_for_sheets (ou _for_docs) estiver ativo, abre um modal de
+ * verificação de identidade do funcionário antes de prosseguir.
+ * Retorna Promise<string|null> — emp_sign_token JWT, ou null se 2FA não requerido.
+ */
+async function requireEmployeeAuth(empId, empName) {
+  const method = _orgSettings?.employee_2fa_method || 'pin';
+
+  return new Promise((resolve, reject) => {
+    const isEmail = method === 'email';
+
+    openModal({
+      title: `🔐 Verificação de Identidade — ${E(empName)}`,
+      bodyHtml: `
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#92400e">
+          ⚠️ Esta organização exige verificação de identidade do funcionário antes de prosseguir.
+        </div>
+        ${isEmail ? `
+        <div class="form-group">
+          <label>Código enviado por e-mail</label>
+          <div style="display:flex;gap:8px;align-items:flex-end">
+            <input type="text" id="emp-otp-code" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" style="flex:1">
+            <button class="btn btn-ghost btn-sm" id="emp-otp-send-btn" style="white-space:nowrap">📧 Enviar código</button>
+          </div>
+          <div id="emp-otp-hint" style="font-size:11px;color:#6b7280;margin-top:4px"></div>
+        </div>` : `
+        <div class="form-group">
+          <label>PIN do funcionário</label>
+          <input type="password" id="emp-pin-input" maxlength="8" placeholder="PIN cadastrado" autocomplete="off">
+        </div>`}
+        <div id="emp-auth-status" style="font-size:12px;color:#dc2626;margin-top:4px"></div>`,
+      confirmLabel: '✅ Verificar e Continuar',
+      onConfirm: async (overlay, close) => {
+        const statusEl = overlay.querySelector('#emp-auth-status');
+        statusEl.textContent = 'Verificando...';
+        try {
+          let body;
+          if (isEmail) {
+            const code = overlay.querySelector('#emp-otp-code')?.value.trim();
+            if (!code) { statusEl.textContent = 'Informe o código recebido por e-mail.'; return; }
+            body = { method: 'email', code, org_id: _orgId };
+          } else {
+            const pin = overlay.querySelector('#emp-pin-input')?.value.trim();
+            if (!pin) { statusEl.textContent = 'Informe o PIN do funcionário.'; return; }
+            body = { method: 'pin', pin, org_id: _orgId };
+          }
+          const result = await api(`/employees/${empId}/otp/verify?orgId=${_orgId}`, {
+            method: 'POST',
+            body: JSON.stringify(body),
+          });
+          close();
+          resolve(result.data?.emp_sign_token || null);
+        } catch (e) {
+          statusEl.textContent = e.message || 'Verificação falhou.';
+        }
+      },
+      onCancel: () => reject(new Error('Verificação cancelada.')),
+    });
+
+    // Botão de envio de código por e-mail (apenas método email)
+    if (isEmail) {
+      setTimeout(() => {
+        document.getElementById('emp-otp-send-btn')?.addEventListener('click', async () => {
+          const hintEl  = document.getElementById('emp-otp-hint');
+          const sendBtn = document.getElementById('emp-otp-send-btn');
+          sendBtn.disabled = true;
+          sendBtn.textContent = 'Enviando...';
+          try {
+            const r = await api(`/employees/${empId}/otp/send?orgId=${_orgId}`, {
+              method: 'POST',
+              body: JSON.stringify({ org_id: _orgId }),
+            });
+            hintEl.textContent = `Código enviado para ${r.data?.hint || 'o e-mail cadastrado'}. Válido por 10 min.`;
+            sendBtn.textContent = '📧 Reenviar código';
+            sendBtn.disabled = false;
+            setTimeout(() => { sendBtn.disabled = false; }, 30000);
+          } catch (e) {
+            hintEl.textContent = e.message;
+            sendBtn.textContent = '📧 Enviar código';
+            sendBtn.disabled = false;
+          }
+        });
+      }, 100);
+    }
+  });
+}
+
 async function openElectronicSignModal(dataset, periodMonth, onDone) {
   const empName = dataset.empName;
   const empId   = parseInt(dataset.empId, 10);
@@ -1712,13 +2404,24 @@ async function openElectronicSignModal(dataset, periodMonth, onDone) {
     confirmLabel: '✅ Confirmar Aceite',
     onConfirm: async (overlay, close) => {
       try {
+        // Se 2FA de funcionário estiver ativo, verifica identidade primeiro
+        let empSignToken = null;
+        if (_orgSettings?.employee_2fa_for_sheets) {
+          close(); // fecha o modal de confirmação antes de abrir o de auth
+          try {
+            empSignToken = await requireEmployeeAuth(empId, empName);
+          } catch (_) { return; }
+        }
+
         if (!sigId) {
           const created = await apiPost('/signatures', { employee_id: empId, period_month: periodMonth });
           sigId = created?.id;
         }
-        await apiPut(`/signatures/${sigId}/electronic-sign`, {});
+        const body = {};
+        if (empSignToken) body.emp_sign_token = empSignToken;
+        await apiPut(`/signatures/${sigId}/electronic-sign`, body);
         showToast('Aceite eletrônico registrado com sucesso.', 'success');
-        close();
+        if (!_orgSettings?.employee_2fa_for_sheets) close();
         if (onDone) onDone();
       } catch (e) { showToast(e.message, 'error'); }
     },
@@ -1817,6 +2520,91 @@ function openFolhaSettings(currentSettings, periodMonth) {
 }
 
 /* ─── Aba: Assinatura (plano) ────────────────────────────────── */
+/* ─── Notificação de plano ─────────────────────────────────── */
+
+/**
+ * Verifica se faz sentido sugerir troca de plano.
+ * Aceita status pré-carregado para evitar fetch duplo.
+ */
+async function checkPlanNotification(preloadedStatus) {
+  try {
+    const st = preloadedStatus ?? await apiGet('/status').catch(() => null);
+    if (!st) return;
+
+    const { plan, employeeCount = 0, maxEmployees = 0, active } = st;
+    const dismissKey = `ponto_plan_dismiss_${_orgId}`;
+
+    let message = null;
+    if (!active) {
+      message = 'Sua assinatura está inativa. Veja os planos disponíveis.';
+    } else if (plan === 'per_employee' && employeeCount > 10) {
+      // Com 11+ total (9+ cobráveis), plano fixo Mini pode compensar
+      message = `Com ${employeeCount} funcionários, o plano Mini (fixo R$340/mês) pode ser mais econômico.`;
+    } else if (maxEmployees > 0 && employeeCount / maxEmployees >= 0.8) {
+      const pct = Math.round(employeeCount / maxEmployees * 100);
+      message = `Você está usando ${pct}% da capacidade do plano atual (${employeeCount}/${maxEmployees}).`;
+    }
+
+    if (!message) {
+      _planUpgradeSuggested = false;
+      _refreshPlanBtn();
+      return;
+    }
+
+    // Verifica se foi dispensado para esta quantidade de funcionários
+    const dismissed = JSON.parse(localStorage.getItem(dismissKey) || 'null');
+    if (dismissed && employeeCount <= (dismissed.count ?? 0)) {
+      _planUpgradeSuggested = false;
+      _refreshPlanBtn();
+      return;
+    }
+
+    _planUpgradeSuggested = true;
+    _refreshPlanBtn();
+    _showPlanBanner(message, employeeCount, dismissKey);
+  } catch (_) {}
+}
+
+function _refreshPlanBtn() {
+  const btn = document.getElementById('cfg-plano-btn');
+  if (!btn) return;
+  if (_planUpgradeSuggested) {
+    btn.className = 'btn btn-sm';
+    btn.style.cssText = 'background:#f59e0b;color:#fff;border:1px solid #d97706;font-weight:600;white-space:nowrap';
+    btn.innerHTML = '💳 Gerenciar Plano ↗ <span style="display:inline-block;width:8px;height:8px;background:#fff;border-radius:50%;margin-left:4px;vertical-align:middle"></span>';
+  } else {
+    btn.className = 'btn btn-ghost btn-sm';
+    btn.style.cssText = 'white-space:nowrap';
+    btn.innerHTML = '💳 Gerenciar Plano ↗';
+  }
+}
+
+function _showPlanBanner(message, employeeCount, dismissKey) {
+  const banner = document.getElementById('plan-notice-banner');
+  if (!banner || banner.dataset.loaded === '1') return;
+  banner.dataset.loaded = '1';
+  banner.style.cssText = 'display:block;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;' +
+    'padding:10px 16px;margin:8px 16px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.87rem;color:#78350f';
+  banner.innerHTML = `
+    <span>💡 ${message}
+      <a href="/plano/" target="_blank" rel="noopener"
+         style="color:#d97706;font-weight:600;margin-left:6px">Ver planos ↗</a>
+    </span>
+    <button id="plan-notice-dismiss"
+      style="background:none;border:1px solid #fcd34d;border-radius:6px;
+             cursor:pointer;color:#92400e;font-size:.8rem;padding:2px 10px;white-space:nowrap;flex-shrink:0">
+      Ignorar
+    </button>`;
+  document.getElementById('plan-notice-dismiss').addEventListener('click', () => {
+    localStorage.setItem(dismissKey, JSON.stringify({ count: employeeCount, at: Date.now() }));
+    banner.style.display = 'none';
+    banner.dataset.loaded = '0';
+    _planUpgradeSuggested = false;
+    _refreshPlanBtn();
+  });
+}
+
+/* ─── Aba: Assinatura (acesso interno) ──────────────────────── */
 async function renderAssinatura(container) {
   container.innerHTML = '<div class="ponto-loading">Carregando...</div>';
   try {
@@ -1911,6 +2699,7 @@ async function openPunchModal() {
           <span>📍 Incluir localização GPS</span>
         </label>
       </div>
+      <div id="punch-photo-row" style="display:none;margin-top:4px"></div>
       <div id="punch-status" style="font-size:12px;color:#6b7280;margin-top:4px"></div>`,
     confirmLabel: '✅ Registrar',
     confirmClass: 'btn-success',
@@ -1955,6 +2744,31 @@ async function openPunchModal() {
     const opt    = ev.target.selectedOptions[0];
     const gpsRow = document.getElementById('punch-gps-row');
     if (gpsRow) gpsRow.style.display = (opt?.dataset.gps === '1') ? '' : 'none';
+
+    // Amostragem de foto: se configurado, exibe foto do funcionário ao acaso
+    const empId = parseInt(ev.target.value, 10);
+    if (empId && _orgSettings?.photo_sample_on_punch && Math.random() < 0.25) {
+      const photoRow = document.getElementById('punch-photo-row');
+      if (!photoRow) return;
+      photoRow.style.display = '';
+      photoRow.innerHTML = '<span style="color:#6b7280;font-size:12px">Carregando foto...</span>';
+      apiGet(`/employees/${empId}/photo`).then(photo => {
+        if (photo?.storage_ref) {
+          photoRow.innerHTML = `
+            <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 12px;font-size:12px">
+              <strong>📷 Verificação de identidade (amostragem)</strong><br>
+              <span style="color:#6b7280">Arquivo: ${E(photo.file_name)} · ${E(photo.storage_type)}</span><br>
+              <a href="${E(photo.storage_ref)}" target="_blank" rel="noopener" style="color:#2563eb;font-size:12px">🔗 Abrir foto para conferência</a>
+            </div>`;
+        } else {
+          photoRow.innerHTML = '';
+          photoRow.style.display = 'none';
+        }
+      }).catch(() => {
+        photoRow.innerHTML = '';
+        photoRow.style.display = 'none';
+      });
+    }
   });
 }
 
@@ -2057,10 +2871,16 @@ async function doLogin(email, password) {
   const resp = await fetch(`${MOTOR_URL}/api/ponto/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, deviceFingerprint: getDeviceFingerprint() }),
   });
   const body = await resp.json();
   if (!resp.ok) throw new Error(body.error || 'Credenciais inválidas.');
+
+  // Salva e-mail para pré-preencher reauth
+  localStorage.setItem('ponto_admin_email', email.trim().toLowerCase());
+
+  // 2FA necessário → retorna promessa ao caller para exibir desafio
+  if (body.requires2FA) return body;
 
   // Login com múltiplas empresas: encaminha para o seletor
   if (body.multiOrg) {
@@ -2083,11 +2903,128 @@ function showLoginForm() {
   const form      = document.getElementById('login-form');
   const errEl     = document.getElementById('login-error');
   const submitBtn = document.getElementById('login-submit');
+  let _2faPhase     = false;
+  let _2faTempToken = null;
+  let _2faMethods   = [];
+
+  function show2FAChallenge(tempToken, methods, orgName) {
+    _2faPhase     = true;
+    _2faTempToken = tempToken;
+    _2faMethods   = methods || ['totp'];
+
+    // Oculta campos de credenciais e botões sociais
+    form.querySelectorAll('.form-group').forEach(el => el.classList.add('hidden'));
+    form.querySelector('.login-divider')?.classList.add('hidden');
+    document.getElementById('btn-oauth-google')?.classList.add('hidden');
+    document.getElementById('btn-oauth-microsoft')?.classList.add('hidden');
+
+    const hasEmail = _2faMethods.includes('email');
+    const label    = hasEmail ? '📧 Código enviado por e-mail' : '📱 Código do autenticador';
+
+    const panel = document.createElement('div');
+    panel.id    = 'login-2fa-panel';
+    panel.innerHTML = `
+      <p style="text-align:center;margin-bottom:12px;color:#555">
+        ${orgName ? `<strong>${orgName}</strong> — ` : ''}Verificação em dois fatores
+      </p>
+      <div class="form-group">
+        <label for="login-2fa-code">${label}</label>
+        <input type="text" id="login-2fa-code" inputmode="numeric" maxlength="8"
+               autocomplete="one-time-code" placeholder="000000"
+               style="letter-spacing:.25em;font-size:1.4rem;text-align:center">
+      </div>
+      ${hasEmail ? `<button type="button" class="btn btn-secondary" id="login-2fa-resend"
+          style="width:100%;margin-bottom:10px">Reenviar código</button>` : ''}
+      <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;margin-bottom:10px;cursor:pointer">
+        <input type="checkbox" id="login-2fa-trust">
+        <span>Não perguntar neste dispositivo por:</span>
+        <select id="login-2fa-trust-days" style="margin-left:4px">
+          <option value="1">1 dia</option>
+          <option value="7" selected>7 dias</option>
+          <option value="15">15 dias</option>
+          <option value="30">30 dias</option>
+          <option value="-1">Sempre</option>
+        </select>
+      </label>
+      <button type="button" id="login-2fa-back"
+        style="background:none;border:none;color:var(--primary,#0066cc);cursor:pointer;font-size:.85rem;padding:0">
+        ← Voltar para o login
+      </button>
+    `;
+    errEl.before(panel);
+    submitBtn.textContent = 'Verificar';
+    document.getElementById('login-2fa-code').focus();
+
+    if (hasEmail) {
+      _sendEmailOtp(tempToken);
+      document.getElementById('login-2fa-resend')?.addEventListener('click', () => _sendEmailOtp(tempToken));
+    }
+
+    document.getElementById('login-2fa-back').addEventListener('click', () => location.reload());
+  }
+
+  async function _sendEmailOtp(tempToken) {
+    try {
+      await fetch(`${MOTOR_URL}/api/ponto/auth/2fa/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tempToken }),
+      });
+    } catch (_) { /* silencioso */ }
+  }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     errEl.classList.add('hidden');
     errEl.textContent = '';
+
+    if (_2faPhase) {
+      // ── Fase 2: verificar código ──
+      const code = document.getElementById('login-2fa-code').value.trim();
+      if (!code) {
+        errEl.textContent = 'Informe o código.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      const trust     = document.getElementById('login-2fa-trust').checked;
+      const trustDays = trust ? parseInt(document.getElementById('login-2fa-trust-days').value, 10) : null;
+      const method    = _2faMethods.includes('totp') ? 'totp' : 'email';
+
+      submitBtn.disabled    = true;
+      submitBtn.textContent = 'Verificando...';
+      try {
+        const r = await fetch(`${MOTOR_URL}/api/ponto/auth/2fa/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tempToken: _2faTempToken,
+            code,
+            method,
+            deviceFingerprint: getDeviceFingerprint(),
+            trustDays,
+            deviceName: navigator.userAgent.substring(0, 120),
+          }),
+        });
+        const body = await r.json();
+        if (!r.ok) throw new Error(body.error || 'Código inválido.');
+
+        _token = body.token;
+        _orgId = body.orgId;
+        localStorage.setItem('ponto_token',    body.token);
+        localStorage.setItem('ponto_org_id',   body.orgId);
+        localStorage.setItem('ponto_login_at', Date.now().toString());
+        document.getElementById('app-login').classList.add('hidden');
+        startApp();
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
+        submitBtn.disabled    = false;
+        submitBtn.textContent = 'Verificar';
+      }
+      return;
+    }
+
+    // ── Fase 1: credenciais ──
     const email    = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
     if (!email || !password) {
@@ -2099,9 +3036,12 @@ function showLoginForm() {
     submitBtn.textContent = 'Entrando...';
     try {
       const result = await doLogin(email, password);
-      // multiOrg: doLogin já exibiu o seletor; não chama startApp aqui
       if (result === null) {
         document.getElementById('app-login').classList.add('hidden');
+        return;
+      }
+      if (result?.requires2FA) {
+        show2FAChallenge(result.tempToken, result.methods, result.orgName);
         return;
       }
       document.getElementById('app-login').classList.add('hidden');
@@ -2110,8 +3050,10 @@ function showLoginForm() {
       errEl.textContent = err.message;
       errEl.classList.remove('hidden');
     } finally {
-      submitBtn.disabled    = false;
-      submitBtn.textContent = 'Entrar';
+      if (!_2faPhase) {
+        submitBtn.disabled    = false;
+        submitBtn.textContent = 'Entrar';
+      }
     }
   });
 }
@@ -2131,6 +3073,9 @@ function startApp() {
     const orgEl = document.getElementById('app-header-org');
     if (orgEl && st?.orgName) orgEl.textContent = cfg?.org_display_name || st.orgName;
 
+    // Cache global das configurações da organização
+    if (cfg) _orgSettings = cfg;
+
     if (cfg?.logo_url) {
       _logoUrl       = cfg.logo_url;
       _displayOrgName = cfg.org_display_name || st?.orgName || '';
@@ -2142,6 +3087,14 @@ function startApp() {
         if (iconEl) iconEl.style.display = 'none';
       }
     }
+
+    // Timer de inatividade (admin_session_timeout_min = 0 desliga)
+    if ((cfg?.admin_session_timeout_min ?? 0) > 0) {
+      startInactivityTimer(cfg.admin_session_timeout_min * 60 * 1000);
+    }
+
+    // Notificação discreta de upgrade de plano
+    checkPlanNotification(st);
   }).catch(() => {});
 
   // Eventos dos tabs

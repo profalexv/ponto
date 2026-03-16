@@ -62,72 +62,122 @@
   <div id="view-main" class="hidden">
     <div class="container">
 
-      <!-- Status atual do plano -->
-      <div class="card" id="card-status">
-        <div class="card-title">Plano atual</div>
-        <div class="card-sub" id="org-name-sub">Carregando...</div>
-        <div class="plan-status-row">
-          <span id="status-badge" class="plan-badge">—</span>
-          <span id="plan-name" style="font-weight:700;font-size:15px">—</span>
-          <span id="expires-info" style="font-size:13px;color:var(--muted)"></span>
-        </div>
-        <div class="plan-info-grid">
-          <div class="plan-info-item">
-            <label>Colaboradores inclusos</label>
-            <span id="plan-max">—</span>
+      <!-- Navegação por abas -->
+      <div class="plan-tabs-nav" role="tablist">
+        <button class="plan-tab active" data-plan-tab="situacao" role="tab">📊 Meu Plano</button>
+        <button class="plan-tab" data-plan-tab="alterar"  role="tab">🔄 Alterar Plano</button>
+        <button class="plan-tab" data-plan-tab="historico" role="tab">📋 Histórico</button>
+        <button class="plan-tab" data-plan-tab="cobrancas" role="tab">💳 Cobranças</button>
+        <span style="flex:1"></span>
+        <button class="btn btn-ghost btn-sm" id="btn-plano-sair">Sair</button>
+      </div>
+
+      <!-- Aba: Meu Plano -->
+      <div id="tab-situacao" class="plan-tab-panel">
+        <div class="card" id="card-status">
+          <div class="card-title">Plano atual</div>
+          <div class="card-sub" id="org-name-sub">Carregando...</div>
+          <div class="plan-status-row">
+            <span id="status-badge" class="plan-badge">—</span>
+            <span id="plan-name" style="font-weight:700;font-size:15px">—</span>
+            <span id="expires-info" style="font-size:13px;color:var(--muted)"></span>
           </div>
-          <div class="plan-info-item">
-            <label>Colaboradores ativos</label>
-            <span id="plan-used">—</span>
+          <div class="plan-info-grid">
+            <div class="plan-info-item">
+              <label>Colaboradores inclusos</label>
+              <span id="plan-max">—</span>
+            </div>
+            <div class="plan-info-item">
+              <label>Colaboradores ativos</label>
+              <span id="plan-used">—</span>
+            </div>
+            <div class="plan-info-item">
+              <label>Custo extra/colab.</label>
+              <span id="plan-extra-price">—</span>
+            </div>
           </div>
-          <div class="plan-info-item">
-            <label>Custo extra/colab.</label>
-            <span id="plan-extra-price">—</span>
+          <div class="usage-bar-wrap" id="usage-wrap" style="display:none">
+            <div class="usage-bar-label">
+              <span>Uso de colaboradores</span>
+              <span id="usage-pct">—</span>
+            </div>
+            <div class="usage-bar">
+              <div class="usage-bar-fill" id="usage-fill" style="width:0%"></div>
+            </div>
           </div>
-        </div>
-        <div class="usage-bar-wrap" id="usage-wrap" style="display:none">
-          <div class="usage-bar-label">
-            <span>Uso de colaboradores</span>
-            <span id="usage-pct">—</span>
-          </div>
-          <div class="usage-bar">
-            <div class="usage-bar-fill" id="usage-fill" style="width:0%"></div>
+          <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="switchPlanTab('alterar')">🔄 Alterar plano</button>
+            <button class="btn btn-ghost btn-sm" onclick="switchPlanTab('historico')">📋 Ver histórico</button>
+            <button class="btn btn-ghost btn-sm" onclick="switchPlanTab('cobrancas')">💳 Ver cobranças</button>
           </div>
         </div>
       </div>
 
-      <!-- Mudar de plano -->
-      <div class="card">
-        <div class="card-title">Alterar plano</div>
-        <div class="card-sub">Selecione o plano desejado. A mudança entra em vigor no próximo ciclo de cobrança.</div>
-        <div class="plans-grid" id="plans-grid">
-          <!-- preenchido por JS -->
-        </div>
-        <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn btn-primary" id="btn-change-plan" disabled>Confirmar mudança de plano</button>
-          <button class="btn btn-ghost" id="btn-contact-redes">🏢 Solicitar plano Redes</button>
+      <!-- Aba: Alterar Plano -->
+      <div id="tab-alterar" class="plan-tab-panel hidden">
+        <div class="card">
+          <div class="card-title">Alterar plano</div>
+          <div class="card-sub">Selecione o plano desejado. A mudança entra em vigor no próximo ciclo de cobrança.</div>
+          <div class="plans-grid" id="plans-grid">
+            <!-- preenchido por JS -->
+          </div>
+          <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" id="btn-change-plan" disabled>Confirmar mudança de plano</button>
+            <button class="btn btn-ghost" id="btn-contact-redes">🏢 Solicitar plano Redes</button>
+          </div>
         </div>
       </div>
 
-      <!-- Histórico de ciclos -->
-      <div class="card">
-        <div class="card-title">Histórico de ciclos</div>
-        <div class="card-sub">Últimos registros de cobrança e uso.</div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Período</th>
-                <th>Plano</th>
-                <th>Colaboradores</th>
-                <th>Valor</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="history-body">
-              <tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">Carregando...</td></tr>
-            </tbody>
-          </table>
+      <!-- Aba: Histórico de mudanças -->
+      <div id="tab-historico" class="plan-tab-panel hidden">
+        <div class="card">
+          <div class="card-title">Histórico de mudanças de plano</div>
+          <div class="card-sub">Registro de todas as alterações de plano da organização.</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Plano anterior</th>
+                  <th>Novo plano</th>
+                  <th>Alterado por</th>
+                  <th>Obs.</th>
+                </tr>
+              </thead>
+              <tbody id="history-body">
+                <tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aba: Cobranças -->
+      <div id="tab-cobrancas" class="plan-tab-panel hidden">
+        <div class="card">
+          <div class="card-title">Cobranças e Faturas</div>
+          <div class="card-sub">Registro de cobranças e faturas associadas à sua assinatura.</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Período</th>
+                  <th>Plano</th>
+                  <th>Colaboradores</th>
+                  <th>Valor</th>
+                  <th>Status</th>
+                  <th>Fatura</th>
+                </tr>
+              </thead>
+              <tbody id="billing-body">
+                <tr><td colspan="6" style="color:var(--muted);text-align:center;padding:20px">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="font-size:12px;color:var(--muted);margin-top:16px">
+            Dúvidas sobre cobranças? Entre em contato:
+            <a href="mailto:financeiro@ponto.alexandre.pro.br" style="color:var(--brand)">financeiro@ponto.alexandre.pro.br</a>
+          </p>
         </div>
       </div>
 
@@ -142,10 +192,10 @@
   let _selectedPlan = null;
 
   const PLANS = [
-    { id: 'per_employee', label: 'Por Colaborador', price: 'a partir de R$10', period: '/colab./mês', desc: 'Ideal para equipes pequenas. R$20 (1–8) · R$16 (9–16) · R$10 (17+)', max: 0, extra: null },
-    { id: 'mini',         label: 'Mini',            price: 'R$ 340',           period: '/mês',         desc: 'Até 30 colaboradores. +R$10/extra.', max: 30, extra: 10 },
-    { id: 'pronto',       label: 'Pronto',          price: 'R$ 640',           period: '/mês',         desc: 'Até 80 colaboradores. +R$10/extra.', max: 80, extra: 10 },
-    { id: 'maximo',       label: 'Máximo',          price: 'R$ 980',           period: '/mês',         desc: 'Até 150 colaboradores. +R$6/extra.',  max: 150, extra: 6 },
+    { id: 'per_employee', label: 'Por Colaborador', price: 'a partir de R$20', period: '/colab. cobrado/mês', desc: '2 colaboradores sempre grátis. R$20/colab. (1–8 cobrados) · R$16/colab. (9–16) · R$10/colab. (17+). Inclui todos os recursos: AFD, kiosque, 2FA e segurança avançada.', max: 0, extra: null },
+    { id: 'mini',         label: 'Mini',            price: 'R$ 340',           period: '/mês',         desc: 'Até 30 colaboradores. +R$10/extra. Fotos de colaboradores + 2FA e segurança avançada.', max: 30, extra: 10 },
+    { id: 'pronto',       label: 'Pronto',          price: 'R$ 640',           period: '/mês',         desc: 'Até 80 colaboradores. +R$10/extra. Fotos + Documentos legais automáticos + 2FA e segurança avançada.',  max: 80, extra: 10 },
+    { id: 'maximo',       label: 'Máximo',          price: 'R$ 980',           period: '/mês',         desc: 'Até 150 colaboradores. +R$6/extra. Fotos + Documentos + Períodos + múltiplos kiosques + 2FA e segurança avançada.',  max: 150, extra: 6 },
   ];
 
   /* ── Helpers ── */
@@ -240,7 +290,7 @@
       }
 
       renderPlansGrid(st.plan);
-      loadHistory();
+      // Histórico e cobranças são carregados de forma lazy ao mudar de aba
     } catch (e) {
       toast('Erro ao carregar plano: ' + e.message, 'error');
     }
@@ -288,6 +338,8 @@
     window.location.href = 'mailto:contato@ponto.alexandre.pro.br?subject=Plano%20Redes%20-%20Solicita%C3%A7%C3%A3o';
   });
 
+  const PLAN_NAMES_HIST = { per_employee: 'Por Colaborador', mini: 'Mini', pronto: 'Pronto', maximo: 'Máximo', free: 'Free', trial: 'Trial', redes: 'Redes' };
+
   async function loadHistory() {
     const tbody = document.getElementById('history-body');
     try {
@@ -298,16 +350,76 @@
       }
       tbody.innerHTML = rows.map(r => `
         <tr>
-          <td>${E(r.period)}</td>
-          <td>${E(r.plan_label || r.plan_type)}</td>
-          <td>${E(r.employee_count)}</td>
-          <td>${E(r.amount != null ? 'R$ ' + Number(r.amount).toFixed(2).replace('.', ',') : '—')}</td>
-          <td><span class="plan-badge ${r.status === 'paid' ? 'plan-badge-active' : 'plan-badge-inactive'}">${E(r.status === 'paid' ? 'Pago' : r.status)}</span></td>
+          <td>${E(r.changed_at ? new Date(r.changed_at).toLocaleString('pt-BR', {dateStyle:'short',timeStyle:'short'}) : '—')}</td>
+          <td>${E(PLAN_NAMES_HIST[r.previous_plan] || r.previous_plan || '—')}</td>
+          <td>${E(PLAN_NAMES_HIST[r.new_plan] || r.new_plan || '—')}</td>
+          <td>${E(r.changed_by || '—')}</td>
+          <td style="font-size:12px;color:var(--muted)">${E(r.notes || '')}</td>
         </tr>`).join('');
     } catch (_) {
       tbody.innerHTML = `<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">Histórico indisponível.</td></tr>`;
     }
   }
+
+  async function loadBilling() {
+    const tbody = document.getElementById('billing-body');
+    try {
+      // Tenta endpoint de cobranças; se não existir, exibe mensagem amigável
+      const rows = await api(`/plan/billing?orgId=${_orgId}`).catch(() => null);
+      if (!rows?.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:28px">
+          <div style="font-size:32px;margin-bottom:8px">📄</div>
+          Nenhuma cobrança registrada ainda.<br>
+          <span style="font-size:12px">As faturas aparecerão aqui após o primeiro ciclo de cobrança.</span>
+        </td></tr>`;
+        return;
+      }
+      tbody.innerHTML = rows.map(r => {
+        const statusClass = r.status === 'paid' ? 'plan-badge-active' : r.status === 'pending' ? 'plan-badge-trial' : 'plan-badge-inactive';
+        const statusLabel = { paid: 'Pago', pending: 'Pendente', overdue: 'Atrasado', cancelled: 'Cancelado' }[r.status] || r.status;
+        return `<tr>
+          <td>${E(r.period || '—')}</td>
+          <td>${E(PLAN_NAMES_HIST[r.plan_type] || r.plan_type || '—')}</td>
+          <td>${E(r.employee_count ?? '—')}</td>
+          <td>${E(r.amount != null ? 'R$\u00a0' + Number(r.amount).toFixed(2).replace('.', ',') : '—')}</td>
+          <td><span class="plan-badge ${statusClass}">${E(statusLabel)}</span></td>
+          <td>${r.invoice_url ? `<a href="${E(r.invoice_url)}" target="_blank" rel="noopener" style="color:var(--brand)">Ver fatura ↗</a>` : '—'}</td>
+        </tr>`;
+      }).join('');
+    } catch (_) {
+      tbody.innerHTML = `<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:20px">Cobranças indisponíveis.</td></tr>`;
+    }
+  }
+
+  /* ── Troca de abas ── */
+  let _billingLoaded = false;
+  let _historyLoaded = false;
+
+  function switchPlanTab(name) {
+    document.querySelectorAll('.plan-tab').forEach(btn =>
+      btn.classList.toggle('active', btn.dataset.planTab === name));
+    document.querySelectorAll('.plan-tab-panel').forEach(el =>
+      el.classList.toggle('hidden', el.id !== 'tab-' + name));
+    if (name === 'historico' && !_historyLoaded) {
+      _historyLoaded = true;
+      loadHistory();
+    }
+    if (name === 'cobrancas' && !_billingLoaded) {
+      _billingLoaded = true;
+      loadBilling();
+    }
+  }
+
+  document.querySelectorAll('.plan-tab').forEach(btn =>
+    btn.addEventListener('click', () => switchPlanTab(btn.dataset.planTab)));
+
+  document.getElementById('btn-plano-sair').addEventListener('click', () => {
+    localStorage.removeItem('plano_token');
+    localStorage.removeItem('plano_org_id');
+    _token = null; _orgId = null;
+    document.getElementById('view-main').classList.add('hidden');
+    document.getElementById('view-login').classList.remove('hidden');
+  });
 
   /* ── Auto-login por token salvo ou SSO ── */
   (function init() {

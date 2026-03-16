@@ -37,6 +37,13 @@
     <a class="nav-link" href="#configuracoes">Configurações</a>
     <a class="nav-link" href="#assinatura-plano">Gerenciar Plano</a>
 
+    <div class="nav-section">Segurança</div>
+    <a class="nav-link" href="#2fa-gestor">2FA do Gestor</a>
+    <a class="nav-link" href="#timeout-sessao">Timeout de Sessão</a>
+    <a class="nav-link" href="#dispositivo-confiavel">Dispositivo Confiável</a>
+    <a class="nav-link" href="#auth-dispositivo-colab">Autorização de Dispositivo</a>
+    <a class="nav-link" href="#2fa-colaborador">2FA do Colaborador</a>
+
     <div class="nav-section">Exportação</div>
     <a class="nav-link" href="#afd">Exportar AFD</a>
 
@@ -59,9 +66,9 @@
       <h1>Ponto</h1>
       <p class="sub">Manual do Usuário — Controle Eletrônico de Jornada de Trabalho</p>
       <div class="cover-meta">
-        <div class="cover-meta-item"><strong>Versão</strong>2.0 · março/2026</div>
+        <div class="cover-meta-item"><strong>Versão</strong>2.1 · março/2026</div>
         <div class="cover-meta-item"><strong>Acesso</strong>ponto.alexandre.pro.br</div>
-        <div class="cover-meta-item"><strong>Conformidade</strong>CLT Art. 74 · Portaria MTP 671/2021 · LGPD</div>
+        <div class="cover-meta-item"><strong>Conformidade</strong>CLT Art. 74 · Portaria MTP 671/2021 · LGPD · 2FA/TOTP</div>
       </div>
     </div>
 
@@ -209,7 +216,7 @@
         <tbody>
           <tr>
             <td><strong>Por Colaborador</strong></td>
-            <td>R$20 (1–8) · R$16 (9–16) · R$10 (17+)</td>
+            <td>R$20 (1–8 cobrados) · R$16 (9–16) · R$10 (17+)<br><small style="color:#6b7280">2 colaboradores sempre grátis — cobrança a partir do 3º</small></td>
             <td>Conforme escala</td>
             <td>—</td>
           </tr>
@@ -780,6 +787,32 @@
     <h3>Assinaturas</h3>
     <p>Ative ou desative os métodos de assinatura da folha mensal: <strong>Aceite Eletrônico</strong> e/ou <strong>Upload de Scan Físico</strong>. Ao menos um deve estar ativo.</p>
 
+    <h3>Segurança do Gestor</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Opção</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Habilitar 2FA</strong></td><td>Ativa a autenticação de dois fatores para o login do gestor. Ao ativar, escolha o(s) método(s) abaixo.</td></tr>
+          <tr><td><strong>Métodos de 2FA</strong></td><td>E-mail OTP (código enviado ao e-mail do gestor, válido 10 min) e/ou TOTP (Google Authenticator, Authy etc.). Ambos podem ficar ativos ao mesmo tempo.</td></tr>
+          <tr><td><strong>Timeout por inatividade</strong></td><td>Tempo sem interação antes de encerrar a sessão automaticamente: 15, 30 ou 60 minutos. Defina 0 para desativar.</td></tr>
+          <tr><td><strong>Validade do dispositivo confiável</strong></td><td>Quanto tempo o navegador fica marcado como "confiável" após o gestor marcar "não solicitar neste dispositivo": 1 dia, 2 dias, 1 semana, 15 dias, 1 mês ou nunca expira.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Segurança do Colaborador</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Opção</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Exigir autorização de dispositivo</strong></td><td>Cada dispositivo do colaborador precisa ser autorizado e vinculado com aceite eletrônico ou scan do documento de autorização antes de poder bater ponto.</td></tr>
+          <tr><td><strong>2FA para geração de documentos</strong></td><td>Exige verificação de identidade do colaborador (PIN ou código OTP) antes de gerar qualquer documento.</td></tr>
+          <tr><td><strong>2FA para aceite da folha</strong></td><td>Exige verificação de identidade do colaborador (PIN ou código OTP) antes de aceitar eletrônica da folha mensal.</td></tr>
+          <tr><td><strong>Método de 2FA do colaborador</strong></td><td>PIN numérico (já cadastrado) ou código enviado por e-mail (OTP 6 dígitos, válido 10 min).</td></tr>
+        </tbody>
+      </table>
+    </div>
+
     <p>
       O painel de gerenciamento de plano fica em
       <a href="https://ponto.alexandre.pro.br/plano/" target="_blank">ponto.alexandre.pro.br/plano/</a>.
@@ -829,6 +862,109 @@
     </div>
 
     <!-- ─────────────────────────────────────────────── -->
+    <h2 id="2fa-gestor">Segurança: 2FA do Gestor</h2>
+
+    <p>A autenticação de dois fatores (2FA) adiciona uma segunda camada de segurança ao login do gestor. Mesmo que a senha seja comprometida, o acesso é bloqueado sem o código temporário.</p>
+
+    <h3>Ativar o 2FA</h3>
+    <ol class="steps">
+      <li><div class="step-num">1</div><div class="step-body"><strong>Acesse Configurações &rarr; Segurança do Gestor</strong><p>Marque <em>"Habilitar 2FA"</em> e escolha o(s) método(s) desejado(s): E-mail OTP e/ou TOTP.</p></div></li>
+      <li><div class="step-num">2</div><div class="step-body"><strong>Salvar</strong><p>A partir do próximo login, o sistema solicitará o segundo fator após a senha.</p></div></li>
+    </ol>
+
+    <h3>Método: E-mail OTP</h3>
+    <p>Após digitar a senha, um código de 6 dígitos é enviado ao e-mail do gestor. O código expira em <strong>10 minutos</strong> e só pode ser usado uma vez. Se não chegar, clique em <em>"Reenviar código"</em>.</p>
+
+    <h3>Método: TOTP (App Autenticador)</h3>
+    <ol class="steps">
+      <li><div class="step-num">1</div><div class="step-body"><strong>Instale um app autenticador</strong><p>Google Authenticator, Authy, Microsoft Authenticator ou qualquer app compatível com TOTP (RFC 6238).</p></div></li>
+      <li><div class="step-num">2</div><div class="step-body"><strong>Leia o QR code</strong><p>Na tela de configuração do TOTP (Configurações &rarr; Segurança), um QR code é exibido. Escaneie-o com o app autenticador.</p></div></li>
+      <li><div class="step-num">3</div><div class="step-body"><strong>Confirme com o código atual</strong><p>O sistema pede o código gerado pelo app para confirmar que estão sincronizados antes de ativar o TOTP.</p></div></li>
+      <li><div class="step-num">4</div><div class="step-body"><strong>Use nos próximos logins</strong><p>Abra o app, veja o código de 6 dígitos que muda a cada 30 segundos e insira-o na tela de 2FA.</p></div></li>
+    </ol>
+
+    <div class="warn">
+      <div class="callout-title">⚠️ Guarde o QR code</div>
+      <p>Se perder o acesso ao app autenticador e não tiver e-mail como segundo fator, você precisará acionar o suporte para revogar o 2FA. Guarde o QR code ou o código em texto em local seguro.</p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="timeout-sessao">Segurança: Timeout de Sessão</h2>
+
+    <p>O painel pode ser configurado para encerrar a sessão automaticamente após um período de inatividade. Isso protege contra acesso não autorizado em computadores compartilhados.</p>
+
+    <h3>Como configurar</h3>
+    <p>Em <strong>Configurações &rarr; Segurança do Gestor</strong>, escolha o <strong>Timeout por inatividade</strong>: 15, 30 ou 60 minutos. Defina 0 para desativar.</p>
+
+    <h3>Como funciona</h3>
+    <ul>
+      <li>O sistema rastreia o último momento de interação (cliques, digitação, navegação entre abas)</li>
+      <li>Quando o tempo configurado passa sem interação, um modal de reautenticação é exibido</li>
+      <li>Se o 2FA estiver ativo, a reautenticação também exige o segundo fator</li>
+      <li>Sem reautenticação dentro de 2 minutos, a sessão é encerrada e o gestor é levado à tela de login</li>
+    </ul>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="dispositivo-confiavel">Segurança: Dispositivo Confiável</h2>
+
+    <p>Após completar o 2FA, o gestor pode marcar o dispositivo como <strong>"confiável"</strong> para evitar re-autenticação nas próximas sessões naquele navegador/máquina.</p>
+
+    <h3>Como funcionar</h3>
+    <ol class="steps">
+      <li><div class="step-num">1</div><div class="step-body"><strong>Complete o 2FA normalmente</strong><p>Insira a senha + o código do segundo fator.</p></div></li>
+      <li><div class="step-num">2</div><div class="step-body"><strong>Clique em "Não solicitar 2FA neste dispositivo"</strong><p>Um token criptografado é salvo no navegador. O sistema armazena a referência em <code>ponto_admin_trusted_devices</code>.</p></div></li>
+      <li><div class="step-num">3</div><div class="step-body"><strong>Próximos logins from mesma máquina</strong><p>O 2FA é pulado automaticamente até o período de validade (configurado em Configurações &rarr; Segurança). Após a expiração, o 2FA é solicitado novamente.</p></div></li>
+    </ol>
+
+    <div class="tip">
+      <div class="callout-title">✅ Recomendação</div>
+      <p>Use "Dispositivo confiável" apenas em equipamentos pessoais ou de uso exclusivo. Em computadores compartilhados, não marque essa opção.</p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="auth-dispositivo-colab">Segurança: Autorização de Dispositivo do Colaborador</h2>
+
+    <p>Quando <em>"Exigir autorização de dispositivo"</em> está ativo em Configurações, cada dispositivo que o colaborador usar para bater ponto precisa ser previamente autorizado pelo gestor e vinculado a um documento de aceite.</p>
+
+    <h3>Processo de autorização</h3>
+    <ol class="steps">
+      <li><div class="step-num">1</div><div class="step-body"><strong>Colaborador acessa o sistema</strong><p>Na tela de bater ponto, se o dispositivo ainda não estiver autorizado, o sistema exibe mensagem e solicita cadastro.</p></div></li>
+      <li><div class="step-num">2</div><div class="step-body"><strong>Gestor autoriza no painel</strong><p>Na aba de autorização de dispositivos, localize o dispositivo pendente do colaborador e clique em <em>"Autorizar"</em>.</p></div></li>
+      <li><div class="step-num">3</div><div class="step-body"><strong>Documento de aceite</strong><p>O sistema solicita o <strong>aceite eletrônico</strong> (o colaborador confirma na própria tela) ou o <strong>upload do scan</strong> do documento de autorização assinado fisicamente. Sem o aceite, a autorização não é concluída.</p></div></li>
+    </ol>
+
+    <div class="danger-note">
+      <div class="callout-title">🚫 Dispositivo nunca pode ser excluído — apenas bloqueado</div>
+      <p>Uma vez autorizado, o dispositivo fica registrado permanentemente em <code>ponto_employee_authorized_devices</code>. A exclusão não é permitida para preservar a trilha de auditoria. Se o dispositivo for perdido ou substituído, bloqueie-o.</p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
+    <h2 id="2fa-colaborador">Segurança: 2FA do Colaborador para Documentos e Folha</h2>
+
+    <p>O gestor pode exigir que o próprio colaborador confirme sua identidade antes de gerar documentos ou aceitar eletronicamente a folha mensal. Isso garante que nenhum documento ou assinatura seja emitido sem a ação consciente do colaborador.</p>
+
+    <h3>Como configurar</h3>
+    <p>Em <strong>Configurações &rarr; Segurança do Colaborador</strong>, ative:</p>
+    <ul>
+      <li><strong>2FA para geração de documentos</strong> — exige verificação antes de clicar em "Gerar Documento" no painel de docs do colaborador</li>
+      <li><strong>2FA para aceite da folha</strong> — exige verificação antes do aceite eletrônico na Folha Mensal</li>
+      <li><strong>Método</strong>: PIN numérico (já cadastrado) ou OTP por e-mail (6 dígitos, válido 10 min)</li>
+    </ul>
+
+    <h3>Fluxo do colaborador</h3>
+    <ol class="steps">
+      <li><div class="step-num">1</div><div class="step-body"><strong>Gestor clica em "Aceite Eletrônico" ou "Gerar Documento"</strong><p>Um modal de verificação de identidade é exibido antes de prosseguir.</p></div></li>
+      <li><div class="step-num">2</div><div class="step-body"><strong>Colaborador insere o PIN ou solicita código por e-mail</strong><p>Se o método for e-mail OTP, o código é enviado ao endereço cadastrado do colaborador, válido por 10 minutos.</p></div></li>
+      <li><div class="step-num">3</div><div class="step-body"><strong>Backend valida e emite <code>emp_sign_token</code></strong><p>Um JWT de 5 minutos é gerado. O frontend o inclui na requisição de assinatura ou de geração de documento. Após 5 minutos, o token expira e a verificação precisa ser feita novamente.</p></div></li>
+      <li><div class="step-num">4</div><div class="step-body"><strong>Ação executada</strong><p>O documento é gerado ou a assinatura da folha é gravada com trilha de auditoria.</p></div></li>
+    </ol>
+
+    <div class="tip">
+      <div class="callout-title">✅ Validade jurídica</div>
+      <p>A combinação de aceite eletrônico com verificação de identidade (PIN ou OTP) atende aos requisitos de assinatura eletrônica simples da Lei 14.063/2020 e é suportada pela MP 2.200-2/2001 (ICP-Brasil como referência de confiabilidade).</p>
+    </div>
+
+    <!-- ─────────────────────────────────────────────── -->
     <h2 id="conformidade">Conformidade Legal</h2>
 
     <p>O Ponto foi desenvolvido para atender as principais exigências da legislação brasileira:</p>
@@ -861,6 +997,16 @@
             <td><strong>LGPD (Lei 13.709/2018)</strong></td>
             <td>Consentimento para dados pessoais sensíveis</td>
             <td>GPS capturado somente com consentimento documentado e confirmado no cadastro</td>
+          </tr>
+          <tr>
+            <td><strong>MP 2.200-2/2001 (ICP-Brasil)</strong></td>
+            <td>Validade jurídica de documentos eletrônicos</td>
+            <td>Aceite eletrônico da folha e documentos com autenticação de identidade do colaborador</td>
+          </tr>
+          <tr>
+            <td><strong>Lei 14.063/2020 (Assinatura eletrônica)</strong></td>
+            <td>Assinatura eletrônica simples em atos</td>
+            <td>Verificação por PIN ou OTP antes de toda assinatura de document ou folha mensal</td>
           </tr>
         </tbody>
       </table>
@@ -934,6 +1080,11 @@
           <tr><td><strong>Dia de corte</strong></td><td>Dia do mês em que o período de apuração encerra. Ex.: dia 25 = período vai do dia 26 ao dia 25 seguinte</td></tr>
           <tr><td><strong>Período de apuração</strong></td><td>Intervalo de tempo (normalmente mensal) usado para calcular e fechar a jornada; pode não coincidir com o mês civil</td></tr>
           <tr><td><strong>NSR</strong></td><td>Número Sequencial de Registro — contador incremental de cada marcação no arquivo AFD</td></tr>
+          <tr><td><strong>2FA</strong></td><td>Autenticação de Dois Fatores — segundo fator de segurança além da senha (código temporário por e-mail ou app)</td></tr>
+          <tr><td><strong>TOTP</strong></td><td>Time-based One-Time Password — código de 6 dígitos que muda a cada 30 segundos, gerado por apps como Google Authenticator</td></tr>
+          <tr><td><strong>OTP</strong></td><td>One-Time Password — código de uso único enviado por e-mail, válido por tempo limitado (10 minutos no Ponto)</td></tr>
+          <tr><td><strong>Dispositivo confiável</strong></td><td>Navegador/máquina marcado para não solicitar 2FA por um período configurado pelo gestor</td></tr>
+          <tr><td><strong>emp_sign_token</strong></td><td>JWT de 5 minutos emitido pelo backend após verificação de identidade do colaborador; necessário para assinar folha ou gerar documentos quando 2FA do colaborador está ativo</td></tr>
         </tbody>
       </table>
     </div>
@@ -1016,10 +1167,34 @@
       Eventuais manutenções são realizadas em horários de baixo uso.
     </p>
 
+    <h3>Como ativo o 2FA para o gestor?</h3>
+    <p>
+      Acesse <strong>Configurações &rarr; Segurança do Gestor</strong>, marque <em>"Habilitar 2FA"</em> e escolha um ou ambos os métodos (E-mail OTP ou TOTP).  Salve. A partir do próximo login, o segundo fator será solicitado após a senha.
+    </p>
+
+    <h3>O que é TOTP e qual app usar?</h3>
+    <p>
+      TOTP (Time-based One-Time Password) é um código de 6 dígitos que muda a cada 30 segundos, gerado por um app autenticador sem depender de internet ou e-mail. Use Google Authenticator, Authy, Microsoft Authenticator ou Bitwarden Authenticator. Na aba de Configurações, escaneie o QR code exibido com o app.
+    </p>
+
+    <h3>Como funciona o "não solicitar 2FA neste dispositivo"?</h3>
+    <p>
+      Após completar o 2FA com sucesso, uma opção de marcar o dispositivo como confiável é exibida. Ao marcar, o sistema salva um token no navegador por um período configurado (1 dia a nunca expirar). Enquanto válido, o 2FA é pulado naquele navegador. Use apenas em equipamentos pessoais ou de uso único.
+    </p>
+
+    <h3>Como exigir verificação do colaborador ao assinar a folha ou documentos?</h3>
+    <p>
+      Em <strong>Configurações &rarr; Segurança do Colaborador</strong>, ative <em>"2FA para aceite da folha"</em> e/ou <em>"2FA para geração de documentos"</em>. Quando ativo, antes de cada ação um modal é exibido solicitando o PIN do colaborador ou um código enviado ao e-mail dele.
+    </p>
+
+    <h3>O colaborador pode usar PIN no lugar do código por e-mail para assinar?</h3>
+    <p>
+      Sim. Em <strong>Configurações &rarr; Segurança do Colaborador</strong>, defina o <em>"Método do colaborador"</em> como <strong>PIN</strong>. Ele usará o mesmo PIN numérico cadastrado no pó do colaborador. Para maior segurança, escolha <strong>E-mail OTP</strong> — um código único é enviado ao e-mail do colaborador a cada operação.
+    </p>
+
     <h3>Como garantir que a sessão não expira durante o turno?</h3>
     <p>
-      O token JWT tem validade de 30 dias. Para turnos longos, o sistema não exige reautenticação durante o uso.
-      Se a sessão expirar, basta fazer login novamente — os dados salvos no servidor não são afetados.
+      O token JWT tem validade de 30 dias. Para turnos longos sem interação, se o <strong>Timeout por inatividade</strong> estiver configurado em Configurações, a sessão será interrompida após o período definido e o gestor precisará reautenticar. Se não usar timeout, a sessão dura até o token expirar (30 dias).
     </p>
 
     <hr>
