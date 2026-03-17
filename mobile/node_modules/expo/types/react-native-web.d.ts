@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { StyleProp } from 'react-native';
 import * as RN from 'react-native';
 
@@ -13,21 +15,21 @@ declare module 'react-native' {
     /** @platform web */
     backdropFilter?: string;
     /** @platform web */
-    animationDelay?: string;
+    animationDelay?: string | string[] | number | number[];
     /** @platform web */
-    animationDirection?: string;
+    animationDirection?: string | string[];
     /** @platform web */
-    animationDuration?: string;
+    animationDuration?: string | string[] | number | number[];
     /** @platform web */
-    animationFillMode?: string;
+    animationFillMode?: string | string[];
     /** @platform web */
-    animationName?: string | any[];
+    animationName?: string | Record<string, any> | (string | Record<string, any>)[];
     /** @platform web */
-    animationIterationCount?: number | 'infinite';
+    animationIterationCount?: number | 'infinite' | (number | 'infinite')[];
     /** @platform web */
-    animationPlayState?: string;
+    animationPlayState?: string | string[];
     /** @platform web */
-    animationTimingFunction?: string;
+    animationTimingFunction?: string | string[];
     /** @platform web */
     backgroundAttachment?: string;
     /** @platform web */
@@ -45,15 +47,9 @@ declare module 'react-native' {
     /** @platform web */
     backgroundSize?: string;
     /** @platform web */
-    boxShadow?: string;
-    /** @platform web */
     boxSizing?: string;
     /** @platform web */
     clip?: string;
-    /** @platform web */
-    cursor?: string;
-    /** @platform web */
-    filter?: string;
     /** @platform web */
     gridAutoColumns?: string;
     /** @platform web */
@@ -81,8 +77,6 @@ declare module 'react-native' {
     /** @platform web */
     outline?: string;
     /** @platform web */
-    outlineColor?: string;
-    /** @platform web */
     overflowX?: string;
     /** @platform web */
     overflowY?: string;
@@ -99,15 +93,13 @@ declare module 'react-native' {
     /** @platform web */
     touchAction?: string;
     /** @platform web */
-    transformOrigin?: string;
+    transitionDelay?: string | string[];
     /** @platform web */
-    transitionDelay?: string;
+    transitionDuration?: string | string[] | number;
     /** @platform web */
-    transitionDuration?: string;
+    transitionProperty?: string | string[];
     /** @platform web */
-    transitionProperty?: string;
-    /** @platform web */
-    transitionTimingFunction?: string;
+    transitionTimingFunction?: string | Function | (string | Function)[];
     /** @platform web */
     userSelect?: string;
     /** @platform web */
@@ -134,21 +126,21 @@ declare module 'react-native' {
     /** @platform web */
     backdropFilter?: string;
     /** @platform web */
-    animationDelay?: string;
+    animationDelay?: string | string[] | number | number[];
     /** @platform web */
-    animationDirection?: string;
+    animationDirection?: string | string[];
     /** @platform web */
-    animationDuration?: string;
+    animationDuration?: string | string[] | number | number[];
     /** @platform web */
-    animationFillMode?: string;
+    animationFillMode?: string | string[];
     /** @platform web */
-    animationName?: string | any[];
+    animationName?: string | Record<string, any> | (string | Record<string, any>)[];
     /** @platform web */
-    animationIterationCount?: number | 'infinite';
+    animationIterationCount?: number | 'infinite' | (number | 'infinite')[];
     /** @platform web */
-    animationPlayState?: string;
+    animationPlayState?: string | string[];
     /** @platform web */
-    animationTimingFunction?: string;
+    animationTimingFunction?: string | string[];
     /** @platform web */
     backgroundAttachment?: string;
     /** @platform web */
@@ -220,17 +212,13 @@ declare module 'react-native' {
     /** @platform web */
     touchAction?: string;
     /** @platform web */
-    transformOrigin?: string;
+    transitionDelay?: string | string[];
     /** @platform web */
-    transitionDelay?: string;
+    transitionDuration?: string | string[];
     /** @platform web */
-    transitionDuration?: string;
+    transitionProperty?: string | string[];
     /** @platform web */
-    transitionProperty?: string;
-    /** @platform web */
-    transitionTimingFunction?: string;
-    /** @platform web */
-    userSelect?: string;
+    transitionTimingFunction?: string | Function | (string | Function)[];
     /** @platform web */
     visibility?: string;
     /** @platform web */
