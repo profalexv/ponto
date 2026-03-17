@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Ponto Jornada",
+    "slug": "ponto-jornada",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#2563eb",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "br.pro.alexandre.ponto",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "O Ponto usa sua localização para registrar onde o ponto foi batido, conforme autorização prévia."
+      }
+    },
+    "android": {
+      "package": "br.pro.alexandre.ponto",
+      "versionCode": 1,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O Ponto usa sua localização para registrar onde o ponto foi batido, conforme autorização prévia."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "ponto-jornada"
+      }
+    }
+  }
+}
