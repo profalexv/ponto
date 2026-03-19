@@ -1,6 +1,6 @@
 # Ponto — Controle de Jornada de Colaboradores
 
-> **URL:** `https://ponto.alexandre.pro.br` (GitHub Pages)
+> **URL:** `https://ponto.axom.app` (GitHub Pages)
 
 Sistema **independente** de controle de jornada de trabalho.  
 Pode ser contratado por **qualquer empresa** — comércio, indústria, saúde, serviços, escolas, redes, etc.
@@ -12,7 +12,7 @@ Pode ser contratado por **qualquer empresa** — comércio, indústria, saúde, 
 ```
 ponto/ (frontend estático)          motor/ (API Node.js)          Supabase (PostgreSQL)
   GitHub Pages                         Fly.io — São Paulo
-  ponto.alexandre.pro.br  ──HTTPS──►  aula-motor.fly.dev  ──────►  rgiaryfatyvsfgqjubmh
+  ponto.axom.app  ──HTTPS──►  aula-motor.fly.dev  ──────►  rgiaryfatyvsfgqjubmh
 ```
 
 ### Regras invioláveis
@@ -100,7 +100,7 @@ Redes:
 ## Acesso
 
 ### Login direto (empresas independentes)
-Qualquer empresa acessa `https://ponto.alexandre.pro.br` com e-mail e senha.  
+Qualquer empresa acessa `https://ponto.axom.app` com e-mail e senha.  
 O gestor é cadastrado em `ponto_admins` com senha em bcrypt.  
 JWT emitido com `{ userId, orgId, role: 'ponto_admin' }`.
 
@@ -151,7 +151,7 @@ Nenhum novo login é solicitado. Usado pelos clientes AULA que acessam via paine
 | **Máximo** | R$ 980 | até 150 | +R$6 |
 | **Redes** | sob consulta | ilimitado (multi-unidade) | — |
 
-> Usuários do **AULA.app** têm 20% de desconto em qualquer plano SaaS.
+> Usuários do **aula.axom.app** têm 20% de desconto em qualquer plano SaaS.
 
 ### Auto-hospedagem
 
