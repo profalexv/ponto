@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Ponto — Kiosque</title>
+  <title>Pontual — Kiosque</title>
   <link rel="icon" href="/favicon.ico">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -470,7 +470,7 @@ function showSetup(errorMsg = '') {
   render(`
     <div style="text-align:center">
       <div class="kiosk-logo">🖥️</div>
-      <div class="kiosk-title">Ponto Kiosque</div>
+      <div class="kiosk-title">Pontual Kiosque</div>
       <div class="kiosk-subtitle">Configure este dispositivo para começar</div>
     </div>
     <div class="kiosk-card">
@@ -485,7 +485,7 @@ function showSetup(errorMsg = '') {
       ${errorMsg ? `<div class="kiosk-error">${E(errorMsg)}</div>` : ''}
       <button class="btn btn-primary" id="setup-btn" style="margin-top:16px">Registrar Dispositivo</button>
       <p style="font-size:12px;color:#94a3b8;margin-top:16px;text-align:center">
-        O ID da organização é fornecido pelo administrador do sistema Ponto.
+        O ID da organização é fornecido pelo administrador do sistema Pontual.
       </p>
     </div>`);
 

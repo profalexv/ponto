@@ -1,4 +1,4 @@
-# Ponto — Controle de Jornada de Colaboradores
+# Pontual — Controle de Jornada de Colaboradores
 
 > **URL:** `https://pontual.pro` (GitHub Pages)
 
