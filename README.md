@@ -1,6 +1,6 @@
 # Ponto — Controle de Jornada de Colaboradores
 
-> **URL:** `https://ponto.axom.app` (GitHub Pages)
+> **URL:** `https://pontual.pro` (GitHub Pages)
 
 Sistema **independente** de controle de jornada de trabalho.  
 Pode ser contratado por **qualquer empresa** — comércio, indústria, saúde, serviços, escolas, redes, etc.
@@ -12,7 +12,7 @@ Pode ser contratado por **qualquer empresa** — comércio, indústria, saúde, 
 ```
 ponto/ (frontend estático)          motor/ (API Node.js)          Supabase (PostgreSQL)
   GitHub Pages                         Fly.io — São Paulo
-  ponto.axom.app  ──HTTPS──►  aula-motor.fly.dev  ──────►  rgiaryfatyvsfgqjubmh
+  pontual.pro  ──HTTPS──►  aula-motor.fly.dev  ──────►  rgiaryfatyvsfgqjubmh
 ```
 
 ### Regras invioláveis
@@ -100,7 +100,7 @@ Redes:
 ## Acesso
 
 ### Login direto (empresas independentes)
-Qualquer empresa acessa `https://ponto.axom.app` com e-mail e senha.  
+Qualquer empresa acessa `https://pontual.pro` com e-mail e senha.  
 O gestor é cadastrado em `ponto_admins` com senha em bcrypt.  
 JWT emitido com `{ userId, orgId, role: 'ponto_admin' }`.
 
