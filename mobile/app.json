@@ -11,13 +11,13 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "br.pro.alexandre.ponto",
+      "bundleIdentifier": "pro.pontual",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "O Ponto usa sua localização para registrar onde o ponto foi batido, conforme autorização prévia."
+        "NSLocationWhenInUseUsageDescription": "O Pontual usa sua localização para registrar onde o ponto foi batido, conforme autorização prévia."
       }
     },
     "android": {
-      "package": "br.pro.alexandre.ponto",
+      "package": "pro.pontual",
       "versionCode": 1,
       "permissions": [
         "ACCESS_FINE_LOCATION",
