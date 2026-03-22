@@ -1674,8 +1674,8 @@ function renderConfigForm(container, s, st = null) {
               ${E(planLabel)}${E(planUsage)}
             </p>
           </div>
-          <button id="cfg-plano-btn" class="btn btn-ghost btn-sm" style="white-space:nowrap"
-                  onclick="window.open('/plano/', '_blank', 'noopener')">
+          <button id="cfg-account-btn" class="btn btn-ghost btn-sm" style="white-space:nowrap"
+                  onclick="window.open('/account/', '_blank', 'noopener')">
             💳 Gerenciar Plano ↗
           </button>
         </div>
@@ -2604,7 +2604,7 @@ async function checkPlanNotification(preloadedStatus) {
 }
 
 function _refreshPlanBtn() {
-  const btn = document.getElementById('cfg-plano-btn');
+  const btn = document.getElementById('cfg-account-btn');
   if (!btn) return;
   if (_planUpgradeSuggested) {
     btn.className = 'btn btn-sm';
@@ -2625,7 +2625,7 @@ function _showPlanBanner(message, employeeCount, dismissKey) {
     'padding:10px 16px;margin:8px 16px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.87rem;color:#78350f';
   banner.innerHTML = `
     <span>💡 ${message}
-      <a href="/plano/" target="_blank" rel="noopener"
+      <a href="/account/" target="_blank" rel="noopener"
          style="color:#d97706;font-weight:600;margin-left:6px">Ver planos ↗</a>
     </span>
     <button id="plan-notice-dismiss"
@@ -2679,7 +2679,7 @@ async function renderAssinatura(container) {
       </div>
       <p style="color:#6b7280;font-size:13px;margin-top:8px">
         Para alterar ou cancelar o plano, acesse
-        <a href="/plano/" style="color:#2563eb">Gerenciar Plano</a>.
+        <a href="/account/" style="color:#2563eb">Gerenciar Plano</a>.
       </p>`;
   } catch (e) {
     container.innerHTML = `<div class="ponto-error">Erro: ${E(e.message)}</div>`;
