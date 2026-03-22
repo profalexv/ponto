@@ -1226,7 +1226,7 @@ async function renderDispositivos(container) {
         <span>🖥️ <strong>ID da Organização</strong> (use no setup do app kiosque):</span>
         <code id="org-id-display" style="font-size:12px;color:#1e3a8a;background:#dbeafe;padding:3px 8px;border-radius:4px;cursor:pointer;user-select:all" title="Clique para copiar">${E(_orgId)}</code>
         <button class="btn btn-ghost btn-sm" id="copy-orgid-btn" style="font-size:12px">📋 Copiar</button>
-        <a href="/kiosque/" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="font-size:12px">🔗 Abrir Kiosque</a>
+        <a href="/kiosk/" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="font-size:12px">🔗 Abrir Kiosque</a>
       </div>`;
 
     if (!devices?.length) {
@@ -1235,7 +1235,7 @@ async function renderDispositivos(container) {
           <span style="font-size:40px">🖥️</span>
           <p>Nenhum dispositivo cadastrado.</p>
           <p style="font-size:13px;color:#6b7280;max-width:400px">
-            Dispositivos kiosque são cadastrados automaticamente ao acessar <strong>/kiosque/</strong>.
+            Dispositivos kiosque são cadastrados automaticamente ao acessar <strong>/kiosk/</strong>.
             Após o cadastro, autorize o dispositivo aqui.
           </p>
         </div>`;
@@ -1266,7 +1266,7 @@ async function renderDispositivos(container) {
         <span>${devices.filter(d => d.status === 'active').length} autorizado(s) · ${devices.filter(d => d.status === 'pending').length} aguardando · ${devices.filter(d => d.status === 'blocked').length} bloqueado(s)</span>
       </div>
       <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#1e40af">
-        🖥️ Dispositivos kiosque são cadastrados automaticamente ao acessar <strong>/kiosque/</strong>. Somente dispositivos <strong>autorizados</strong> aceitam registros de ponto.
+        🖥️ Dispositivos kiosque são cadastrados automaticamente ao acessar <strong>/kiosk/</strong>. Somente dispositivos <strong>autorizados</strong> aceitam registros de ponto.
         Dispositivos podem ser <strong>bloqueados</strong> mas nunca excluídos do sistema (auditoria permanente).
       </div>
       <div class="table-wrapper">
