@@ -1,6 +1,7 @@
 # Pontual — Controle de Jornada de Colaboradores
 
-> **URL:** `https://pontual.pro` (GitHub Pages)
+> **URL:** `https://pontual.pro` (domínio principal) · `https://pontual.axom.app` (alias)  
+> **Hospedagem:** GitHub Pages
 
 Sistema **independente** de controle de jornada de trabalho.  
 Pode ser contratado por **qualquer empresa** — comércio, indústria, saúde, serviços, escolas, redes, etc.
@@ -176,3 +177,14 @@ Inclui todos os recursos do Máximo + suporte e manutenção mensal. Permite ges
 Destinado a redes de empresas ou instituições que precisam gerenciar múltiplas unidades sob um único contrato.  
 Cada unidade é uma `ponto_organization` com `parent_org_id` apontando para a organização-mãe.  
 Cobrança e relatórios consolidados na organização-mãe. Preço negociado conforme volume.
+---
+
+## Contato
+
+pontual@pontual.pro
+
+---
+
+## Contato
+
+pontual@pontual.pro
