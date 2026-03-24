@@ -11,34 +11,34 @@ Pode ser contratado por **qualquer empresa** — comércio, indústria, saúde, 
 ## Arquitetura e Regras de Desenvolvimento
 
 ```
-ponto/ (frontend estático)          motor/ (API Node.js)          Supabase (PostgreSQL)
+ponto/ (frontend estático)          login/ (API Node.js)          Supabase (PostgreSQL)
   GitHub Pages                         Fly.io — São Paulo
-  pontual.pro  ──HTTPS──►  aula-motor.fly.dev  ──────►  rgiaryfatyvsfgqjubmh
+  pontual.pro  ──HTTPS──►  axom.fly.dev  ──────►  rgiaryfatyvsfgqjubmh
 ```
 
 ### Regras invioláveis
 
 1. **O frontend NUNCA acessa o Supabase diretamente.**  
-   Toda persistência de dados passa pelo motor (`https://aula-motor.fly.dev`).  
+   Toda persistência de dados passa pelo backend (`https://axom.fly.dev`).  
    O frontend não conhece `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` nem nenhuma credencial de banco.
 
-2. **O motor no Fly.io é o único ponto de contato com o banco de dados.**  
+2. **O backend (login/) no Fly.io é o único ponto de contato com o banco de dados.**  
    Credenciais do Supabase ficam apenas no Fly.io (via `fly secrets set`) e nunca no código ou no `.env` de frontend.
 
 3. **Em desenvolvimento local, somente o frontend roda localmente.**  
-   Não existe "motor local" para o ponto — o frontend aponta sempre para `https://aula-motor.fly.dev`,  
+   Não existe "motor local" para o ponto — o frontend aponta sempre para `https://axom.fly.dev`,  
    tanto em produção quanto em testes locais (`localhost:xxxx`).  
    O CORS do motor já permite `http://localhost:*` para desenvolvimento.
 
 4. **Migrations são aplicadas via Supabase CLI, nunca pelo frontend.**  
    ```bash
-   cd motor/
+   cd login/
    supabase db push          # aplica migrações pendentes
    ```
 
 5. **Seed de dados de teste** é executado via motor:
    ```bash
-   cd motor/
+   cd login/
    npm run seed              # cria admin@teste.com / Teste@123 + org "Empresa Teste"
    ```
 
@@ -53,13 +53,13 @@ O código está implementado dentro do repositório `app`:
 | Módulo frontend | `src/renderer/modules/ponto/ponto.js` |
 | Rotas API | `src/web/routes/ponto.routes.js` |
 | Bridge de dados | `src/renderer/data/web-bridge.js` (seção Addon Ponto) |
-| Migrations SQL | `../motor/supabase/migrations/20260313100000_addon_ponto.sql` |
-| Migrations SQL | `../motor/supabase/migrations/20260314100000_ponto_verificacao.sql` |
-| Migrations SQL | `../motor/supabase/migrations/20260314200000_ponto_standalone.sql` |
-| Migrations SQL | `../motor/supabase/migrations/20260315700000_ponto_advanced_features.sql` |
-| Migrations SQL | `../motor/supabase/migrations/20260315800000_ponto_logo.sql` |
-| Migrations SQL | `../motor/supabase/migrations/20260315900000_ponto_security.sql` |
-| Migrations SQL | `../motor/supabase/migrations/20260315910000_ponto_employee_otp.sql` |
+| Migrations SQL | `../login/supabase/migrations/20260313100000_addon_ponto.sql` |
+| Migrations SQL | `../login/supabase/migrations/20260314100000_ponto_verificacao.sql` |
+| Migrations SQL | `../login/supabase/migrations/20260314200000_ponto_standalone.sql` |
+| Migrations SQL | `../login/supabase/migrations/20260315700000_ponto_advanced_features.sql` |
+| Migrations SQL | `../login/supabase/migrations/20260315800000_ponto_logo.sql` |
+| Migrations SQL | `../login/supabase/migrations/20260315900000_ponto_security.sql` |
+| Migrations SQL | `../login/supabase/migrations/20260315910000_ponto_employee_otp.sql` |
 
 ## Schema de Banco (Supabase PostgreSQL)
 
