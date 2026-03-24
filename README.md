@@ -1,6 +1,6 @@
 # Pontual — Controle de Jornada de Colaboradores
 
-> **URL:** `https://pontual.pro` (domínio principal) · `https://pontual.axom.app` (alias)  
+> **URL:** `https://pontual.pro` · Módulos: `/system/`, `/kiosk/`, `/account/`, `/manual/`, `/mobile/`  
 > **Hospedagem:** GitHub Pages
 
 Sistema **independente** de controle de jornada de trabalho.  
